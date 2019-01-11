@@ -6,6 +6,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import io.Input;
+
 public class NeuralNet {
     private static final double midPodouble = 0.5; // Midpodouble of logistic equation
     private static final double slope = 5; // Steepness of logistic equation
@@ -18,7 +20,9 @@ public class NeuralNet {
         blackBox = new ArrayList<double[]>();
         addLayer(4);
         addLayer(4);
-        trainingData = readData();
+        //trainingData = readData();
+        Input in = new Input(new File("bareNN/training.txt"));
+        System.out.println(in.readLine());
     }
 
     private void addLayer(int size) {
@@ -27,19 +31,6 @@ public class NeuralNet {
         blackBox.add(new double[size]);
     }
     
-    private double[][] readData() {
-        double[][] output;
-        try {
-        FileReader fReader = new FileReader(new File("training.txt"));
-        BufferedReader reader = new BufferedReader(new FileReader(new File("training.txt")));
-        String s = reader.readLine();
-        
-        int numLines = Integer.parseInt(s.substring(0, s.indexOf((' '))));
-        //output = new double[s.substring(0, )]
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     private static double logistic(double input) {
         double power = -slope * (input - midPodouble);
