@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import io.Input;
 
 public class NeuralNet {
-    private static final double midPodouble = 0.5; // Midpodouble of logistic equation
+    private static final double midPodouble = 0.5; // Midpoint of logistic equation
     private static final double slope = 5; // Steepness of logistic equation
     private static final double limit = 1; // Limit of logistic equation
 
@@ -21,7 +21,7 @@ public class NeuralNet {
         addLayer(4);
         addLayer(4);
         //trainingData = readData();
-        Input in = new Input(new File("bareNN/training.txt"));
+        Input in = new Input(new File("../bareNN/training.txt"));
         System.out.println(in.readLine());
     }
 
