@@ -44,15 +44,15 @@ public class BlackBox {
 	}
 
 	public void evalNode(int layer, int node) {
-		assert layer < numLayers()-1;
-		int nextLayerSize = getLayer(layer+1).length;
-		for (int i = 0; i < nextLayerSize; i++) {
-			
+		assert layer < numLayers() - 1;
+		for (int i = 0; i < layerSize(layer + 1); i++) {
+			addToNode(layer + 1, i, connectionValue(layer, node, i));
 		}
 	}
-	
-	private void setNode(int layer, int node) {
-		
+
+	private void addToNode(int layer, int node, double delta) {
+		assert layer < numLayers();
+		getLayer(layer)[node] += delta;
 	}
 
 	// Saves the contents of the matrix to the given file;
@@ -76,8 +76,28 @@ public class BlackBox {
 		return output;
 	}
 
-	public double[] getLayer(int layer) {
-		return matrix.get(layer * 2);
+	// Returns the value of the connection between node1 in layer and node2 in
+	// layer+1
+	private double connectionValue(int layer, int node1, int node2) {
+		return getConnection(layer)[node1 * layerSize(layer + 1) + node2];
+	}
+
+	private double nodeValue(int layer, int node) {
+		return matrix.get(layer)[node];
+	}
+
+	private int layerSize(int layer) {
+		return getLayer(layer).length;
+	}
+
+	/**
+	 * Returns the ith layer. The input layer is layer 0.
+	 * 
+	 * @param i The index of the layer
+	 * @return The ith layer
+	 */
+	public double[] getLayer(int i) {
+		return matrix.get(i * 2);
 	}
 
 	public double[] getConnection(int startLayer) {
