@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Output {
 	private BufferedWriter writer;
@@ -16,6 +17,13 @@ public class Output {
 		}
 	}
 
+	public void save(ArrayList<double[]> toSave) {
+		double[][] saving = new double[toSave.size()][];
+		for (int i = 0; i < saving.length; i++)
+			saving[i] = toSave.get(i);
+		save(saving);
+	}
+	
 	public void save(double[][] toSave) {
 		try {
 			for (int i = 0; i < toSave.length; i++) {
@@ -25,7 +33,6 @@ public class Output {
 					if (j < toSave[i].length - 1)
 						line.append(",");
 				}
-				System.out.println("adding: " + line.toString());
 				writer.write(line.toString());
 				writer.newLine();
 			}
