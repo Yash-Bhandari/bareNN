@@ -32,12 +32,6 @@ public class NeuralNet {
 		
 	}
 
-
-	
-	private void evalNode(int layer, int node) {
-		
-	}
-
 	private void getTrainingData(Input in) {
 		double[] metaData = in.readLine();
 		int numExamples = (int) metaData[0]; // Number of training examples
