@@ -16,7 +16,7 @@ public class Input {
 		try {
 			this.reader = new BufferedReader(new FileReader(file));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			System.out.println("Couldn't initialize file reader");
 		}
 	}
 
@@ -32,7 +32,7 @@ public class Input {
 		int i = 0;
 		while (i < s.length()) {
 			int start = i;
-			while (++i < s.length() && s.charAt(i) != ',');
+			while (++i < s.length() && s.charAt(i) != ',' && s.charAt(i) != '|');
 			temp.add(Double.valueOf(s.substring(start, i++)));
 		}
 		output = new double[temp.size()];
