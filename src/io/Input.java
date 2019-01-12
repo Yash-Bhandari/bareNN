@@ -8,39 +8,39 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Input {
-	BufferedReader reader;
-	boolean nextLine = true;
-	String s;
+    BufferedReader reader;
 
-	public Input(File file) {
-		try {
-			this.reader = new BufferedReader(new FileReader(file));
-		} catch (FileNotFoundException e) {
-			System.out.println("Couldn't initialize file reader");
-		}
-	}
+    public Input(File file) {
+        try {
+            this.reader = new BufferedReader(new FileReader(file));
+        } catch (FileNotFoundException e) {
+            System.out.println("Couldn't initialize file reader");
+        }
+    }
 
-	public double[] readLine() {
-		ArrayList<Double> temp = new ArrayList<Double>();
-		double[] output;
-		if (nextLine)
-			try {
-				s = reader.readLine();
-			} catch (IOException e) {
-				System.out.println("couldn't read");
-			}
-		int i = 0;
-		while (i < s.length()) {
-			int start = i;
-			while (++i < s.length() && s.charAt(i) != ',' && s.charAt(i) != '|');
-			temp.add(Double.valueOf(s.substring(start, i++)));
-		}
-		output = new double[temp.size()];
-		for (int j = 0; j < temp.size(); j++)
-			output[j] = temp.get(j).doubleValue();
+    public double[] readLine() {
+        ArrayList<Double> temp = new ArrayList<Double>();
+        double[] output;
+        String s = "";
+        try {
+            s = reader.readLine();
+        } catch (IOException e) {
+            System.out.println("couldn't read");
+        }
+        if (s == null)
+            return null;
+        int i = 0;
+        while (i < s.length()) {
+            int start = i;
+            while (++i < s.length() && s.charAt(i) != ',' && s.charAt(i) != '|')
+                ;
+            temp.add(Double.valueOf(s.substring(start, i++)));
+        }
+        output = new double[temp.size()];
+        for (int j = 0; j < temp.size(); j++)
+            output[j] = temp.get(j).doubleValue();
 
-		return output;
-		// output = new double[s.substring(0, )]
-	}
-
+        return output;
+        // output = new double[s.substring(0, )]
+    }
 }
