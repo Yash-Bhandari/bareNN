@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Random;
 
 import io.Input;
@@ -29,7 +30,7 @@ public class BlackBox {
         biases = new ArrayList<double[]>();
         for (int i = 0; i < addLayers.length; i++)
             addLayer(addLayers[i]);
-        build(true);
+        build(populate);
     }
 
     public BlackBox(String path, int numLayers) {
@@ -108,6 +109,18 @@ public class BlackBox {
             addToNode(layer + 1, i, weights[i]);
         }
     }
+    
+    public void adjust(int layer, double[] adjustments) {
+        assert adjustments.length == weights.get(layer).length + biases.get(layer).length;
+        for (int i = 0; i < numWeights(layer); i++)
+            addToWeight(layer, i, adjustments[i]);
+        for (int i = 0; i < numBiases(layer); i++)
+            addToBias(layer, i, adjustments[numWeights(layer) + i]);
+    }
+    
+    public void addToBias(int layer, int endNode, double delta) {
+        biases.get(layer)[endNode] += delta;
+    }
 
     private void addToNode(int layer, int node, double delta) {
         assert layer < numLayers();
@@ -118,8 +131,12 @@ public class BlackBox {
         getLayer(layer)[node] = value;
     }
 
-    void addWeight(int startLayer, int node1, int node2, double delta) {
+    public void addToWeight(int startLayer, int node1, int node2, double delta) {
         setWeight(startLayer, node1, node2, getWeight(startLayer, node1, node2) + delta);
+    }
+
+    public void addToWeight(int startLayer, int weightIndex, double delta) {
+        weights.get(startLayer)[weightIndex] += delta;
     }
 
     private void setBias(int startLayer, int endNode, double value) {
@@ -144,8 +161,8 @@ public class BlackBox {
         for (int i = 0; i < numLayers() - 1; i++) {
             for (int k = 0; k < layerSize(i + 1); k++) {
                 for (int j = 0; j < layerSize(i); j++)
-                    setWeight(i, j, k, r.nextDouble() / 10);
-                setBias(i, k, r.nextDouble() / 10);
+                    setWeight(i, j, k, r.nextDouble());
+                setBias(i, k, r.nextDouble());
             }
         }
     }
@@ -174,6 +191,14 @@ public class BlackBox {
 
     private void setWeight(int startLayer, int node1, int node2, double value) {
         weights.get(startLayer)[node1 * layerSize(startLayer + 1) + node2] = value;
+    }
+    
+    public int numWeights(int startLayer) {
+        return weights.get(startLayer).length;
+    }
+    
+    public int numBiases (int startLayer) {
+        return biases.get(startLayer).length;
     }
 
     // Returns a copy of the biases
@@ -229,5 +254,21 @@ public class BlackBox {
     public double[] outputLayer() {
         return getLayer(numLayers() - 1);
     }
+
+    /*
+     * @Override public Iterator<int[]> iterator() {
+     * 
+     * }
+     * 
+     * private class weightIterator implements Iterator {
+     * 
+     * @Override public boolean hasNext() { // TODO Auto-generated method stub
+     * return false; }
+     * 
+     * @Override public Object next() { // TODO Auto-generated method stub return
+     * null; }
+     * 
+     * }
+     */
 
 }
