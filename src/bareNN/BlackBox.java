@@ -39,7 +39,7 @@ public class BlackBox {
         layers = new ArrayList<double[]>();
         weights = new ArrayList<double[]>();
         biases = new ArrayList<double[]>();
-        double[] line;
+
         layers.add(in.readLine());
         for (int i = 1; i < numLayers; i++) {
             weights.add(in.readLine());
@@ -58,10 +58,11 @@ public class BlackBox {
     }
 
     private void addLayer(int size) {
-        if (numLayers() > 0) // Adds array representing the weights between previous layer and new layer.
+        if (numLayers() > 0) { // Adds array representing the weights between previous layer and new layer.
             weights.add(new double[size * layerSize(numLayers() - 1)]);
+            biases.add(new double[size]);
+        }
         layers.add(new double[size]);
-        biases.add(new double[size]);
     }
 
     private void setLayer(int layer, double[] newLayer) {
@@ -80,6 +81,8 @@ public class BlackBox {
         setLayer(0, input);
         for (int i = 0; i < numLayers() - 1; i++)
             evalLayer(i);
+        // for (double d : outputLayer())
+        // assert !Double.isNaN(d);
         return outputLayer();
     }
 
@@ -87,11 +90,14 @@ public class BlackBox {
         for (int i = 0; i < getLayer(layer).length; i++)
             evalNode(layer, i);
         addBiases(layer);
+        for (int i = 0; i < layerSize(layer + 1); i++)
+            assert !Double.isNaN(nodeValue(layer+1, i));
         if (layer == numLayers() - 2)
             setLayer(layer + 1, softMax(getLayer(layer + 1)));
         else
             for (int i = 0; i < getLayer(layer + 1).length; i++) {
                 setNode(layer + 1, i, sigmoid(nodeValue(layer + 1, i))); // Final transformation of answer
+                
             }
     }
 
@@ -109,7 +115,7 @@ public class BlackBox {
             addToNode(layer + 1, i, weights[i]);
         }
     }
-    
+
     public void adjust(int layer, double[] adjustments) {
         assert adjustments.length == weights.get(layer).length + biases.get(layer).length;
         for (int i = 0; i < numWeights(layer); i++)
@@ -117,7 +123,7 @@ public class BlackBox {
         for (int i = 0; i < numBiases(layer); i++)
             addToBias(layer, i, adjustments[numWeights(layer) + i]);
     }
-    
+
     public void addToBias(int layer, int endNode, double delta) {
         biases.get(layer)[endNode] += delta;
     }
@@ -161,8 +167,8 @@ public class BlackBox {
         for (int i = 0; i < numLayers() - 1; i++) {
             for (int k = 0; k < layerSize(i + 1); k++) {
                 for (int j = 0; j < layerSize(i); j++)
-                    setWeight(i, j, k, r.nextDouble());
-                setBias(i, k, r.nextDouble());
+                    setWeight(i, j, k, r.nextDouble() / 10);
+                setBias(i, k, r.nextDouble() / 10);
             }
         }
     }
@@ -181,10 +187,14 @@ public class BlackBox {
     private static double[] softMax(double[] input) {
         double[] out = new double[input.length];
         double divisor = 0;
-        for (double d : input)
+        for (double d : input) {
+            double temp = Math.exp(d);
+            // if (!Double.isNaN((temp)))
             divisor += Math.exp(d);
+        }
         for (int i = 0; i < input.length; i++) {
             out[i] = Math.exp(input[i]) / divisor;
+            assert !Double.isNaN(out[i]);
         }
         return out;
     }
@@ -192,12 +202,12 @@ public class BlackBox {
     private void setWeight(int startLayer, int node1, int node2, double value) {
         weights.get(startLayer)[node1 * layerSize(startLayer + 1) + node2] = value;
     }
-    
+
     public int numWeights(int startLayer) {
         return weights.get(startLayer).length;
     }
-    
-    public int numBiases (int startLayer) {
+
+    public int numBiases(int startLayer) {
         return biases.get(startLayer).length;
     }
 

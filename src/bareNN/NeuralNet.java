@@ -1,6 +1,7 @@
 package bareNN;
 
 import java.io.BufferedReader;
+import java.io.DataOutput;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -20,23 +21,34 @@ public class NeuralNet {
     // output nodes.
     private double[][] trainingData;
     private double[][] trainingAnswers;
+    private double delta = 0.1; // Step size in gradient descent
     private int inputSize; // size of input layer
     private int outputSize; // size of output layer
-    private String savePath = "src/io/savedNet";
+    private final String savePath;
+    private String trainingPath = "saves/training.txt";
 
-    public NeuralNet() {
-        //blackBox = new BlackBox("src/io/savedNet.txt", 2);
-        int[] params = { 4, 4 };
-        blackBox = new BlackBox(params, false);
-        getTrainingData(new Input(new File("src/io/training.txt")));
-        System.out.println(cost());
+    public NeuralNet(String savePath, int[] layers) {
+        this.savePath = savePath + "savedNet";
+        // int[] params = { 4, 5 };
+        blackBox = new BlackBox(layers, true);
+        getTrainingData(trainingPath);
+        // System.out.println(cost());
         // blackBox.clearLayers();
-        blackBox.save(savePath);
-        backPropagation(30);
-        blackBox.save(savePath+"1");
+        // blackBox.save(savePath);
+        // backPropagation(500);
     }
 
-    private void getTrainingData(Input in) {
+    public NeuralNet(String saveLocation, int numLayers) {
+        this.savePath = saveLocation;
+        blackBox = new BlackBox(saveLocation, 2);
+        blackBox.clearLayers();
+        inputSize = blackBox.inputSize();
+        outputSize = blackBox.outputSize();
+        getTrainingData(trainingPath);
+    }
+
+    private void getTrainingData(String path) {
+        Input in = new Input(new File(path));
         double[] metaData = in.readLine();
         int numExamples = (int) metaData[0]; // Number of training examples
         inputSize = (int) metaData[1];
@@ -51,23 +63,40 @@ public class NeuralNet {
         }
     }
 
+    public double[] apply(double[] input) {
+        assert input.length == inputSize;
+        return blackBox.eval(input);
+    }
+
     private double cost() {
         assert trainingAnswers.length == trainingData.length;
         double cost = 0;
         for (int i = 0; i < trainingData.length; i++) {
             double singleCost = sqError(blackBox.eval(trainingData[i]), trainingAnswers[i]) / trainingData.length;
+            
             cost += singleCost;
         }
         return cost;
     }
 
-    private void backPropagation(int iterations) {
-        for (int i = 0; i < iterations; i++) {
-            double[] normalizedDescent = normalize(descent(), 0.1);
-            blackBox.adjust(0, normalizedDescent);
-            System.out.println("Iteration " + i + " has a cost of " + cost());
-            blackBox.save("src/io/descent/iteration" + i + ".txt");
+    public void backPropagation(int iterations) {
+        for (int j = 0; j < blackBox.numLayers() - 1; j++) {
+            for (int i = 0; i < iterations; i++) {
+                double[] normalizedDescent = normalize(descent(j), delta);
+                blackBox.adjust(j, normalizedDescent);
+                double cost = cost();
+                System.out.println("Iteration " + i + " has a cost of " + cost);
+                
+            }
         }
+    }
+    
+    public void save() {
+        blackBox.save(savePath);
+    }
+    
+    public void save(String altSavePath) {
+        blackBox.save(altSavePath);
     }
 
     // Returns a copy of the given vector rescaled to the given magnitude
@@ -77,15 +106,13 @@ public class NeuralNet {
         for (int i = 0; i < vector.length; i++)
             originalMag += vector[i] * vector[i];
         originalMag = Math.sqrt(originalMag);
-        for (int i = 0; i < vector.length; i++) 
+        for (int i = 0; i < vector.length; i++)
             output[i] = vector[i] / originalMag * magnitude;
         return output;
     }
 
-    private double[] descent() {
+    private double[] descent(int layer) {
         double initialCost = cost();
-        double delta = 0.1;
-        int layer = 0;
         // sign indicates direction to move variable, magnitude is how much it lowers
         // cost.
         double[] descent = new double[blackBox.getWeights(layer).length + blackBox.getBiases(layer).length];
@@ -99,9 +126,10 @@ public class NeuralNet {
             if (positiveChange < 0 || negativeChange < 0) {
                 if (positiveChange < negativeChange)
                     descent[i] = Math.abs(positiveChange);
-                else 
+                else
                     descent[i] = negativeChange;
-            }
+            } else
+                descent[i] = 0;
         }
 
         for (int i = 0; i < blackBox.getBiases(layer).length; i++) {
@@ -110,27 +138,42 @@ public class NeuralNet {
             blackBox.addToBias(layer, i, -2 * delta);
             double negativeChange = cost() - initialCost; // Testing decreasing the bias
             blackBox.addToBias(layer, i, delta); // Returns to normal
-            
+
             if (positiveChange < 0 || negativeChange < 0) {
                 if (positiveChange < negativeChange)
                     descent[blackBox.getWeights(layer).length + i] = Math.abs(positiveChange);
-                else 
+                else
                     descent[blackBox.getWeights(layer).length + i] = negativeChange;
-            }
+            } else
+                descent[i] = 0;
         }
         return descent;
     }
-
+    
+    public String getSaveLocation() {
+        return savePath;
+    }
 
     private static double sqError(double[] outputs, double[] answer) {
         double sqError = 0;
         for (int i = 0; i < outputs.length; i++) {
+            assert outputs[i] != Double.NaN;
             sqError += (outputs[i] - answer[i]) * (outputs[i] - answer[i]);
         }
+        assert sqError != Double.NaN;
         return sqError;
     }
+    
 
     public static void main(String[] args) {
-        new NeuralNet();
+        int[] layers = { 4, 5, 5};
+        NeuralNet net = new NeuralNet("saves/3layer/", layers);
+        //NeuralNet net = new NeuralNet("saves/3layer/savedNet.txt", 2);
+        net.backPropagation(200);
+        //net.save();
+        System.out.println(net.cost());
+        System.out.println(net.getSaveLocation());
+        double[] test = { 1, 0, 0, 1 };
+        System.out.println(Arrays.toString(net.apply(test)));
     }
 }
