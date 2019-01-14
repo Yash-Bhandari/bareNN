@@ -35,7 +35,7 @@ public class BlackBox {
 
     public BlackBox(String path, int numLayers) {
         this.path = path;
-        Input in = new Input(new File(path));
+        Input in = new Input(new File(path + ".txt"));
         layers = new ArrayList<double[]>();
         weights = new ArrayList<double[]>();
         biases = new ArrayList<double[]>();
@@ -76,7 +76,6 @@ public class BlackBox {
 
     public double[] eval(double[] input) {
         assert input.length == inputSize;
-        Arrays.copyOf(input, inputSize);
         clearLayers();
         setLayer(0, input);
         for (int i = 0; i < numLayers() - 1; i++)
@@ -90,14 +89,12 @@ public class BlackBox {
         for (int i = 0; i < getLayer(layer).length; i++)
             evalNode(layer, i);
         addBiases(layer);
-        for (int i = 0; i < layerSize(layer + 1); i++)
-            assert !Double.isNaN(nodeValue(layer+1, i));
         if (layer == numLayers() - 2)
             setLayer(layer + 1, softMax(getLayer(layer + 1)));
         else
             for (int i = 0; i < getLayer(layer + 1).length; i++) {
                 setNode(layer + 1, i, sigmoid(nodeValue(layer + 1, i))); // Final transformation of answer
-                
+
             }
     }
 
@@ -159,6 +156,7 @@ public class BlackBox {
             out.add(getLayer(i));
         }
         new Output(new File(path + ".txt")).save(out);
+        System.out.println("saved to " + path + ".txt");
     }
 
     // Populates weights and biases in matrix with random values near 0

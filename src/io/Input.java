@@ -14,7 +14,7 @@ public class Input {
         try {
             this.reader = new BufferedReader(new FileReader(file));
         } catch (FileNotFoundException e) {
-            System.out.println("Couldn't initialize file reader");
+            e.printStackTrace();
         }
     }
 
