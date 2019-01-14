@@ -119,8 +119,12 @@ public class NeuralNet {
         // sign indicates direction to move variable, magnitude is how much it lowers
         // cost.
         double[] descent = new double[blackBox.getWeights(layer).length + blackBox.getBiases(layer).length];
-
-        for (int i = layer; i < blackBox.numWeights(layer); i++) {
+        
+        for (int j = 0; j < blackBox.numWeights(layer); j++) {
+        	
+        }
+        
+        for (int i = 0; i < blackBox.numWeights(layer); i++) {
             if (i % 1000 == 0) System.out.println("finished weight " + i + " out of " + blackBox.numWeights(layer) + " in layer " + layer);
             blackBox.addToWeight(layer, i, delta);
             double positiveChange = cost() - initialCost; // Testing increasing the weight
