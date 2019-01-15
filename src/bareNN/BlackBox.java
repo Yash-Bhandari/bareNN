@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Random;
 
+import javax.swing.text.LayeredHighlighter;
+
 import io.Input;
 import io.Output;
 
@@ -34,6 +36,10 @@ public class BlackBox {
 			addLayer(addLayers[i]);
 		cacheLayer = new ArrayList<double[]>(layers.size());
 		trainingLayers = new ArrayList<double[]>(layers.size());
+		for (int i = 0; i < layers.size(); i++) {
+			cacheLayer.add(null);
+			trainingLayers.add(null);
+		}
 		build(populate);
 	}
 
@@ -52,6 +58,10 @@ public class BlackBox {
 		}
 		cacheLayer = new ArrayList<double[]>(layers.size());
 		trainingLayers = new ArrayList<double[]>(layers.size());
+		for (int i = 0; i < layers.size(); i++) {
+			cacheLayer.add(null);
+			trainingLayers.add(null);
+		}
 		build(false);
 	}
 
@@ -62,6 +72,8 @@ public class BlackBox {
 		inputSize = getLayer(0).length;
 		outputSize = getLayer(numLayers() - 1).length;
 	}
+
+	// WARNING: DO NOT SCROLL PAST THIS POINT
 
 	private void addLayer(int size) {
 		if (numLayers() > 0) { // Adds array representing the weights between previous layer and new layer.
@@ -79,17 +91,39 @@ public class BlackBox {
 		for (int i = 0; i < numLayers(); i++)
 			setLayer(i, new double[getLayer(i).length]);
 	}
-	
+
 	public void clearTrainingLayers() {
 		for (int i = 0; i < numLayers(); i++)
 			trainingLayers.set(i, new double[getLayer(i).length]);
 	}
-	
-	public double[] trainingEval(int startLayer) {
-		for (int i = 0; i < layerSize(startLayer); i++) {
-			//trainingLayers.set(index, element)
+
+	/**
+	 * Returns the output of the blackbox after changing the weightIndexth weight
+	 * connecting from startLayer to startLayer+1 by delta. Uses the cached
+	 * computation to save on time.
+	 * 
+	 * @param startLayer  The index of the starting layer
+	 * @param weightIndex The index of the weight/bias to change
+	 * @param delta       The amount to change the weight/bias by
+	 * @return The output of the blackbox after changing the specified weight
+	 */
+	public double[] trainingEval(int startLayer, int weightIndex, double delta) {
+		clearTrainingLayers();
+		trainingLayers.set(startLayer + 1, cacheLayer.get(startLayer + 1));
+		int node = weightIndex % layerSize(startLayer + 1);
+		double change = weightIndex < numWeights(startLayer)
+				? delta * trainingLayers.get(startLayer)[weightIndex / layerSize(startLayer)]
+				: delta;
+		trainingLayers.get(startLayer + 1)[node] = cacheLayer.get(startLayer + 1)[node] + change;
+		if (startLayer == numLayers() - 2) {
+			trainingLayers.set(startLayer + 1, softMax(trainingLayers.get(startLayer + 1)));
+		} else
+			sigmoid(trainingLayers.get(startLayer + 1));
+
+		for (int i = startLayer + 1; i < numLayers() - 1; i++) {
+			trainEvalLayer(i);
 		}
-		return null;
+		return trainingOutput();
 	}
 
 	public double[] eval(double[] input) {
@@ -102,16 +136,29 @@ public class BlackBox {
 		// assert !Double.isNaN(d);
 		return outputLayer();
 	}
-	
-	public void trainEvalLayer (int layer) {
-		
+
+	public void trainEvalLayer(int layer) {
+		double[] weights = getWeights(layer);
+		for (int i = 0; i < numWeights(layer); i++) {
+			trainingLayers.get(layer + 1)[i % layerSize(layer + 1)] += weights[i]
+					* trainingLayers.get(layer)[i / layerSize(layer)];
+		}
+		if (layer == numLayers() - 2)
+			trainingLayers.set(layer + 1, softMax((trainingLayers.get(layer + 1))));
+		else
+			sigmoid(trainingLayers.get(layer + 1));
 	}
 
 	public void evalLayer(int layer) {
 		for (int i = 0; i < getLayer(layer).length; i++)
 			evalNode(layer, i);
 		addBiases(layer);
-		cacheLayer.set(layer, Arrays.copyOf(getLayer(layer), layerSize(layer)));
+
+		try {
+			cacheLayer.set(layer, Arrays.copyOf(getLayer(layer), layerSize(layer)));
+		} catch (IndexOutOfBoundsException e) {
+			cacheLayer.add(layer, Arrays.copyOf(getLayer(layer), layerSize(layer)));
+		}
 		if (layer == numLayers() - 2)
 			setLayer(layer + 1, softMax(getLayer(layer + 1)));
 		else
@@ -214,6 +261,11 @@ public class BlackBox {
 
 	private static double sigmoid(double input) {
 		return 1 / (1 + Math.exp(input));
+	}
+
+	private static void sigmoid(double[] input) {
+		for (int i = 0; i < input.length; i++)
+			input[i] = sigmoid(input[i]);
 	}
 
 	private static double[] softMax(double[] input) {

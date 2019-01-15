@@ -119,48 +119,59 @@ public class NeuralNet {
 		// sign indicates direction to move variable, magnitude is how much it lowers
 		// cost.
 		double[] descent = new double[blackBox.getWeights(layer).length + blackBox.getBiases(layer).length];
-		
+		double[][] costChanges = new double[2][descent.length]; // First array for testing increasing weight, second
+																// array for testing decreasing the weight
+
 		for (int j = 0; j < trainingData.length; j++) {
+			//if (j % 50 == 0)
+				System.out.println("On training example " + j);
 			blackBox.eval(trainingData[j]);
 			double startError = sqError(blackBox.outputLayer(), trainingAnswers[j]);
-			for (int i = 0; i < blackBox.numWeights(layer); i++) {
-				
+			for (int i = 0; i < blackBox.numWeights(layer) + blackBox.numBiases(layer); i++) {
+				costChanges[0][i] += (startError - sqError(blackBox.trainingEval(layer, i, delta), trainingAnswers[j]))
+						/ descent.length;
+				costChanges[1][i] += (startError - sqError(blackBox.trainingEval(layer, i, -delta), trainingAnswers[j]))
+						/ descent.length;
+			}
+
+			for (int i = 0; i < descent.length; i++) {
+				double positiveChange = costChanges[0][i];
+				double negativeChange = costChanges[1][i];
+				if (positiveChange < 0 || negativeChange < 0) {
+					if (positiveChange < negativeChange)
+						descent[i] = Math.abs(positiveChange);
+					else
+						descent[i] = negativeChange;
+				} else
+					descent[i] = 0;
 			}
 		}
 
-		for (int i = 0; i < blackBox.numWeights(layer); i++) {
-			if (i % 1000 == 0)
-				System.out.println(
-						"finished weight " + i + " out of " + blackBox.numWeights(layer) + " in layer " + layer);
-			blackBox.addToWeight(layer, i, delta);
-			double positiveChange = cost() - initialCost; // Testing increasing the weight
-			blackBox.addToWeight(layer, i, -2 * delta);
-			double negativeChange = cost() - initialCost; // Testing decreasing the weight
-			blackBox.addToWeight(layer, i, delta); // Returns to normal
-			if (positiveChange < 0 || negativeChange < 0) {
-				if (positiveChange < negativeChange)
-					descent[i] = Math.abs(positiveChange);
-				else
-					descent[i] = negativeChange;
-			} else
-				descent[i] = 0;
-		}
-
-		for (int i = 0; i < blackBox.getBiases(layer).length; i++) {
-			blackBox.addToBias(layer, i, delta);
-			double positiveChange = cost() - initialCost; // Testing increasing the bias
-			blackBox.addToBias(layer, i, -2 * delta);
-			double negativeChange = cost() - initialCost; // Testing decreasing the bias
-			blackBox.addToBias(layer, i, delta); // Returns to normal
-
-			if (positiveChange < 0 || negativeChange < 0) {
-				if (positiveChange < negativeChange)
-					descent[blackBox.getWeights(layer).length + i] = Math.abs(positiveChange);
-				else
-					descent[blackBox.getWeights(layer).length + i] = negativeChange;
-			} else
-				descent[i] = 0;
-		}
+		/*
+		 * for (int i = 0; i < blackBox.numWeights(layer); i++) { if (i % 1000 == 0)
+		 * System.out.println( "finished weight " + i + " out of " +
+		 * blackBox.numWeights(layer) + " in layer " + layer);
+		 * blackBox.addToWeight(layer, i, delta); double positiveChange = cost() -
+		 * initialCost; // Testing increasing the weight blackBox.addToWeight(layer, i,
+		 * -2 * delta); double negativeChange = cost() - initialCost; // Testing
+		 * decreasing the weight blackBox.addToWeight(layer, i, delta); // Returns to
+		 * normal if (positiveChange < 0 || negativeChange < 0) { if (positiveChange <
+		 * negativeChange) descent[i] = Math.abs(positiveChange); else descent[i] =
+		 * negativeChange; } else descent[i] = 0;
+		 * 
+		 * }
+		 * 
+		 * for (int i = 0; i < blackBox.getBiases(layer).length; i++) {
+		 * blackBox.addToBias(layer, i, delta); double positiveChange = cost() -
+		 * initialCost; // Testing increasing the bias blackBox.addToBias(layer, i, -2 *
+		 * delta); double negativeChange = cost() - initialCost; // Testing decreasing
+		 * the bias blackBox.addToBias(layer, i, delta); // Returns to normal
+		 * 
+		 * if (positiveChange < 0 || negativeChange < 0) { if (positiveChange <
+		 * negativeChange) descent[blackBox.getWeights(layer).length + i] =
+		 * Math.abs(positiveChange); else descent[blackBox.getWeights(layer).length + i]
+		 * = negativeChange; } else descent[i] = 0; }
+		 */
 		return descent;
 	}
 
