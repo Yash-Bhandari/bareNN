@@ -1,9 +1,11 @@
 package app;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 import bareNN.NeuralNet;
+import io.ImageReader;
 import io.Input;
 
 public class App {
@@ -17,8 +19,15 @@ public class App {
         System.out.println(net.cost());
         net.save();
         //trainNet();
-        test(10000);
-        
+        //test(10000);
+        Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
+        in.readLine();
+        try {
+            ImageReader.writeImage(28, 28, Arrays.copyOfRange(in.readLineInt(), 1, 20), "saves/digit/images/trial1.png");
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     private static void trainNet() {

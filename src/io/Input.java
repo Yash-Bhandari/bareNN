@@ -43,4 +43,29 @@ public class Input {
         return output;
         // output = new double[s.substring(0, )]
     }
+
+    public int[] readLineInt() {
+        ArrayList<Integer> temp = new ArrayList<Integer>();
+        int[] output;
+        String s = "";
+        try {
+            s = reader.readLine();
+        } catch (IOException e) {
+            System.out.println("couldn't read");
+        }
+        if (s == null)
+            return null;
+        int i = 0;
+        while (i < s.length()) {
+            int start = i;
+            while (++i < s.length() && s.charAt(i) != ',' && s.charAt(i) != '|')
+                ;
+            temp.add(Integer.valueOf(s.substring(start, i++)));
+        }
+        output = new int[temp.size()];
+        for (int j = 0; j < temp.size(); j++)
+            output[j] = temp.get(j);
+
+        return output;
+    }
 }

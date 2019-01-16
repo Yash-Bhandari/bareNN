@@ -14,11 +14,7 @@ import io.Output;
 
 public class NeuralNet {
 
-    private BlackBox blackBox; // Matrix representation of neural net.
-    // Each array is one training example.
-    // Indices 0, 1, ... , inputSize-1 are input nodes.
-    // Indices inputSize, inputSize+1, ... , inputSize+outputSize-1 are correct
-    // output nodes.
+    private BlackBox blackBox;
     private double[][] trainingData;
     private double[][] trainingAnswers;
     private double delta = 0.1; // Step size in gradient descent
