@@ -143,7 +143,7 @@ public class NeuralNet {
         }
 
         for (int i = 0; i < blackBox.numWeights(layer); i++) {
-            if (i % 1000 == 0)
+            if (i > 0 && i % 100 == 0)
                 System.out.println(
                         "finished weight " + i + " out of " + blackBox.numWeights(layer) + " in layer " + layer);
             blackBox.addToWeight(layer, i, delta);

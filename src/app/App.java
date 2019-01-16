@@ -19,21 +19,26 @@ public class App {
         System.out.println(net.cost());
         net.save();
         //trainNet();
-        //test(10000);
-        Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
-        in.readLine();
-        try {
-            for (int i = 0; i < 30; i++)
-            ImageReader.writeImage(28, 28, Arrays.copyOfRange(in.readLineInt(), 1, 785), "saves/digit/images/test" + i + ".png");
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        test(10000);
+        /*
+         * Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
+         * in.readLine(); try { for (int i = 0; i < 30; i++) ImageReader.writeImage(28,
+         * 28, Arrays.copyOfRange(in.readLineInt(), 1, 785), "saves/digit/images/test" +
+         * i + ".png"); } catch (IOException e) { // TODO Auto-generated catch block
+         * e.printStackTrace(); }
+         */
     }
 
     private static void trainNet() {
-        double[] stepSizes = { 0.1, 0.1 };
-        net.backPropagation(2, stepSizes);
+        double[] stepSizes = { 0.3, 0.1 };
+        for (int i = 0; i < 3; i++) {
+            double initial = net.cost();
+            net.backPropagation(1, stepSizes);
+            if (net.cost() > initial)
+                break;
+            else
+                net.save();
+        }
         // net.apply(new double[784]);
         net.save();
         System.out.println(net.cost());
@@ -49,8 +54,9 @@ public class App {
             answers[i] = (int) test[i][0];
         }
         int[] predictions = net.classify(test);
-        for (int i = 0; i < predictions.length; i++)
-            System.out.println("The computer predicted " + predictions[i] + " while the real answer was " + answers[i]);
+        // for (int i = 0; i < predictions.length; i++)
+        // System.out.println("The computer predicted " + predictions[i] + " while the
+        // real answer was " + answers[i]);
         int numCorrect = 0;
         for (int i = 0; i < predictions.length; i++)
             if (predictions[i] == answers[i])
