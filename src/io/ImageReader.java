@@ -10,10 +10,6 @@ import javax.imageio.ImageIO;
 
 public class ImageReader {
 
-    public static void main(String[] args) throws Exception {
-        readImage("saves/digit/images/six.png");
-    }
-
     public static void readImage(String path) throws Exception {
         BufferedImage img = ImageIO.read(new File(path));
         WritableRaster raster = img.getRaster();
@@ -24,13 +20,19 @@ public class ImageReader {
     }
 
     public static void writeImage(int width, int height, int[] pixels, String savePath) throws IOException {
-        BufferedImage img = ImageIO.read(new File("saves/digit/images/six.png"));
+        BufferedImage img = ImageIO.read(new File("saves/digit/images/read1.png"));
         System.out.println(pixels.length);
         WritableRaster raster = img.getRaster();
-        int[] pixel = { 255 - pixels[0], 255 - pixels[0], 255 - pixels[0] };
-        raster.setPixel(4, 5, pixel);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int index = width * y + x;
+                int[] pixel = { 255 - pixels[index], 255 - pixels[index], 255 - pixels[index] };
+                raster.setPixel(x, y, pixel);
+            }
+        }
+
         try {
-            ImageIO.write(img, "png", new File("saves/digit/images/read1.png"));
+            ImageIO.write(img, "png", new File(savePath));
         } catch (IOException e) {
             e.printStackTrace();
         }

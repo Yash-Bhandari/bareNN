@@ -23,7 +23,8 @@ public class App {
         Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
         in.readLine();
         try {
-            ImageReader.writeImage(28, 28, Arrays.copyOfRange(in.readLineInt(), 1, 20), "saves/digit/images/trial1.png");
+            for (int i = 0; i < 30; i++)
+            ImageReader.writeImage(28, 28, Arrays.copyOfRange(in.readLineInt(), 1, 785), "saves/digit/images/test" + i + ".png");
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
