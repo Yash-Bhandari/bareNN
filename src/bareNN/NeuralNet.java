@@ -131,6 +131,8 @@ public class NeuralNet {
             output[i] = vector[i] / originalMag * magnitude;
         return output;
     }
+    
+    
 
     private double[] descent(int layer) {
         double initialCost = cost();
@@ -141,7 +143,7 @@ public class NeuralNet {
         for (int j = 0; j < blackBox.numWeights(layer); j++) {
 
         }
-
+        
         for (int i = 0; i < blackBox.numWeights(layer); i++) {
             if (i > 0 && i % 100 == 0)
                 System.out.println(

@@ -18,8 +18,8 @@ public class App {
         net = new NeuralNet("saves/digit/savedNet", 3);
         System.out.println(net.cost());
         net.save();
-        //trainNet();
-        test(10000);
+        trainNet();
+        //test(10000);
         /*
          * Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
          * in.readLine(); try { for (int i = 0; i < 30; i++) ImageReader.writeImage(28,
@@ -30,7 +30,7 @@ public class App {
     }
 
     private static void trainNet() {
-        double[] stepSizes = { 0.3, 0.1 };
+        double[] stepSizes = { 1, 0.1 };
         for (int i = 0; i < 3; i++) {
             double initial = net.cost();
             net.backPropagation(1, stepSizes);
@@ -38,6 +38,7 @@ public class App {
                 break;
             else
                 net.save();
+            test(10000);
         }
         // net.apply(new double[784]);
         net.save();
