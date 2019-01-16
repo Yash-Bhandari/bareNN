@@ -12,19 +12,19 @@ public class App {
 
 	static NeuralNet net;
 
-	public static void main(String[] args) throws Exception{
+	public static void main(String[] args) throws Exception {
 		// int[] layers = { 784, 20, 10 };
 		// NeuralNet net = new NeuralNet("saves/digit", layers);
 		net = new NeuralNet("saves/digit/savedNet", 3);
 		System.out.println(net.cost());
 		net.save();
-		
-		//double[] image = ImageReader.readImage("saves/digit/images/seven.png");
-		//System.out.println(Arrays.toString(image));
-		//System.out.println("The picture is of a " + net.classify(image));
-		
-		//trainNet();
-		test(10000, false);
+
+		// double[] image = ImageReader.readImage("saves/digit/images/seven.png");
+		// System.out.println(Arrays.toString(image));
+		// System.out.println("The picture is of a " + net.classify(image));
+
+	     trainNet();
+		 //test(0, true);
 		/*
 		 * Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
 		 * in.readLine(); try { for (int i = 0; i < 30; i++) ImageReader.writeImage(28,
@@ -42,11 +42,11 @@ public class App {
 			if (net.cost() > initial)
 				break;
 			else
-				net.save();
+				//net.save();
 			test(10000, false);
 		}
 		// net.apply(new double[784]);
-		net.save();
+		//net.save();
 		System.out.println(net.cost());
 	}
 
