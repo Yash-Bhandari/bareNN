@@ -20,6 +20,7 @@ public class BlackBox {
 
 	private ArrayList<double[]> layers;
 	private ArrayList<double[]> weights;
+	//private ArrayList<SimpleMatrix> transformations;
 	private ArrayList<double[]> biases;
 
 	private int inputSize; // size of input layer
