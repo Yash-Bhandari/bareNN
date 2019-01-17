@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.ejml.simple.SimpleMatrix;
+
 import bareNN.NeuralNet;
 import io.ImageReader;
 import io.Input;
@@ -13,18 +15,18 @@ public class App {
 	static NeuralNet net;
 
 	public static void main(String[] args) throws Exception {
-		//int[] layers = { 784, 30, 10 };
-		//net = new NeuralNet("saves/digit", layers);
+		// int[] layers = { 784, 30, 10 };
+		// net = new NeuralNet("saves/digit", layers);
 		net = new NeuralNet("saves/digit/savedNet", 3);
 		System.out.println(net.cost());
-		net.save();
-
+		//net.save();
+		//testMatrix();
 		// double[] image = ImageReader.readImage("saves/digit/images/seven.png");
 		// System.out.println(Arrays.toString(image));
 		// System.out.println("The picture is of a " + net.classify(image));
 
-	     trainNet();
-		 //test(0, true);
+		trainNet();
+		// test(0, true);
 		/*
 		 * Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
 		 * in.readLine(); try { for (int i = 0; i < 30; i++) ImageReader.writeImage(28,
@@ -35,8 +37,8 @@ public class App {
 	}
 
 	private static void trainNet() {
-	    int oldCorrect = test(10000, false);
-		double[] stepSizes = { 0.3, 0.2};
+		int oldCorrect = test(10000, false);
+		double[] stepSizes = { 0.3, 0.2 };
 		for (int i = 0; i < 3; i++) {
 			double initial = net.cost();
 			net.backPropagation(1, stepSizes, true);
@@ -48,7 +50,7 @@ public class App {
 				net.save();
 		}
 		// net.apply(new double[784]);
-		//net.save();
+		// net.save();
 		System.out.println(net.cost());
 	}
 
@@ -72,6 +74,16 @@ public class App {
 				numCorrect++;
 		System.out.println("The computer predicted " + numCorrect + " out of " + numTest + " correctly");
 		return numCorrect;
+	}
+
+	private static void testMatrix() {
+		double[] vector = { 1, 3, 5, 1 };
+		double data[][] = new double[4][4];
+		for (int i = 0; i < 4; i++)
+			data[i][i] = 1;
+		SimpleMatrix s = new SimpleMatrix(data);
+		SimpleMatrix v = new SimpleMatrix(4, 1, false, vector);
+		System.out.println(s);
 	}
 
 }

@@ -1,10 +1,7 @@
 package bareNN;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Random;
 
 import org.ejml.simple.SimpleMatrix;
@@ -19,8 +16,9 @@ public class BlackBox {
 	private String path;
 
 	private ArrayList<double[]> layers;
+	private ArrayList<SimpleMatrix> layerVectors;
 	private ArrayList<double[]> weights;
-	//private ArrayList<SimpleMatrix> transformations;
+	private ArrayList<SimpleMatrix> transformations;
 	private ArrayList<double[]> biases;
 
 	private int inputSize; // size of input layer
@@ -42,6 +40,8 @@ public class BlackBox {
 		layers = new ArrayList<double[]>();
 		weights = new ArrayList<double[]>();
 		biases = new ArrayList<double[]>();
+		layerVectors = new ArrayList<SimpleMatrix>();
+		transformations = new ArrayList<SimpleMatrix>();
 
 		layers.add(in.readLine());
 		for (int i = 1; i < numLayers; i++) {
@@ -49,9 +49,14 @@ public class BlackBox {
 			biases.add(in.readLine());
 			layers.add(in.readLine());
 		}
+		
+		layerVectors.add(new SimpleMatrix(layers.get(0).length, 1, false, layers.get(0)));
+		for (int i = 1; i < layers.size(); i++) {
+			
+		}
 		for (double[] layer : biases)
-		    for (double d : layer)
-		        assert !Double.isNaN(d);
+			for (double d : layer)
+				assert !Double.isNaN(d);
 		build(false);
 	}
 
@@ -95,8 +100,8 @@ public class BlackBox {
 		for (int i = 0; i < getLayer(layer).length; i++)
 			evalNode(layer, i);
 		addBiases(layer);
-		for (double d : getLayer(layer+1))
-		    assert !Double.isNaN(d);
+		for (double d : getLayer(layer + 1))
+			assert !Double.isNaN(d);
 		if (layer == numLayers() - 2)
 			setLayer(layer + 1, softMax(getLayer(layer + 1)));
 		else
@@ -117,14 +122,14 @@ public class BlackBox {
 	private void addBiases(int layer) {
 		for (int i = 0; i < numBiases(layer); i++) {
 			addToNode(layer + 1, i, getBiases(layer)[i]);
-			assert !Double.isNaN(nodeValue(layer+1, i));
+			assert !Double.isNaN(nodeValue(layer + 1, i));
 		}
 	}
 
 	public void adjust(int layer, double[] adjustments) {
 		assert adjustments.length == weights.get(layer).length + biases.get(layer).length;
 		for (double d : adjustments)
-		    assert !Double.isNaN(d);
+			assert !Double.isNaN(d);
 		for (int i = 0; i < numWeights(layer); i++)
 			addToWeight(layer, i, adjustments[i]);
 		for (int i = 0; i < numBiases(layer); i++)
@@ -148,11 +153,11 @@ public class BlackBox {
 		setWeight(startLayer, node1, node2, getWeight(startLayer, node1, node2) + delta);
 	}
 
-	//Adds to weight/bias at the given index
+	// Adds to weight/bias at the given index
 	public void addToWeight(int startLayer, int weightIndex, double delta) {
 		if (weightIndex < numWeights(startLayer))
 			weights.get(startLayer)[weightIndex] += delta;
-		else 
+		else
 			biases.get(startLayer)[weightIndex % numWeights(startLayer)] += delta;
 	}
 
@@ -275,7 +280,7 @@ public class BlackBox {
 	public double[] outputLayer() {
 		return getLayer(numLayers() - 1);
 	}
-	
+
 	private void messing() {
 	}
 
