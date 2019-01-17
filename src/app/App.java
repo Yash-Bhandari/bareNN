@@ -13,8 +13,8 @@ public class App {
 	static NeuralNet net;
 
 	public static void main(String[] args) throws Exception {
-		// int[] layers = { 784, 20, 10 };
-		// NeuralNet net = new NeuralNet("saves/digit", layers);
+		//int[] layers = { 784, 30, 10 };
+		//net = new NeuralNet("saves/digit", layers);
 		net = new NeuralNet("saves/digit/savedNet", 3);
 		System.out.println(net.cost());
 		net.save();
@@ -35,22 +35,24 @@ public class App {
 	}
 
 	private static void trainNet() {
-		double[] stepSizes = { 0.3, 0.1 };
+	    int oldCorrect = test(10000, false);
+		double[] stepSizes = { 0.3, 0.2};
 		for (int i = 0; i < 3; i++) {
 			double initial = net.cost();
-			net.backPropagation(1, stepSizes);
-			if (net.cost() > initial)
+			net.backPropagation(1, stepSizes, true);
+			double newCost = net.cost();
+			int correct = test(10000, false);
+			if (Double.isNaN(newCost) || newCost > initial || correct < oldCorrect)
 				break;
 			else
-				//net.save();
-			test(10000, false);
+				net.save();
 		}
 		// net.apply(new double[784]);
 		//net.save();
 		System.out.println(net.cost());
 	}
 
-	private static void test(int numTest, boolean print) {
+	private static int test(int numTest, boolean print) {
 		Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
 		in.readLine();
 		double[][] test = new double[numTest][];
@@ -69,6 +71,7 @@ public class App {
 			if (predictions[i] == answers[i])
 				numCorrect++;
 		System.out.println("The computer predicted " + numCorrect + " out of " + numTest + " correctly");
+		return numCorrect;
 	}
 
 }

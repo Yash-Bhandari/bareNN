@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.ejml.simple.SimpleMatrix;
+
 import io.Input;
 import io.Output;
 
@@ -46,6 +48,9 @@ public class BlackBox {
 			biases.add(in.readLine());
 			layers.add(in.readLine());
 		}
+		for (double[] layer : biases)
+		    for (double d : layer)
+		        assert !Double.isNaN(d);
 		build(false);
 	}
 
@@ -89,6 +94,8 @@ public class BlackBox {
 		for (int i = 0; i < getLayer(layer).length; i++)
 			evalNode(layer, i);
 		addBiases(layer);
+		for (double d : getLayer(layer+1))
+		    assert !Double.isNaN(d);
 		if (layer == numLayers() - 2)
 			setLayer(layer + 1, softMax(getLayer(layer + 1)));
 		else
@@ -107,14 +114,16 @@ public class BlackBox {
 
 	// Adds biases from the given layer to layer+1
 	private void addBiases(int layer) {
-		double[] weights = getBiases(layer);
-		for (int i = 0; i < weights.length; i++) {
-			addToNode(layer + 1, i, weights[i]);
+		for (int i = 0; i < numBiases(layer); i++) {
+			addToNode(layer + 1, i, getBiases(layer)[i]);
+			assert !Double.isNaN(nodeValue(layer+1, i));
 		}
 	}
 
 	public void adjust(int layer, double[] adjustments) {
 		assert adjustments.length == weights.get(layer).length + biases.get(layer).length;
+		for (double d : adjustments)
+		    assert !Double.isNaN(d);
 		for (int i = 0; i < numWeights(layer); i++)
 			addToWeight(layer, i, adjustments[i]);
 		for (int i = 0; i < numBiases(layer); i++)
@@ -264,6 +273,9 @@ public class BlackBox {
 
 	public double[] outputLayer() {
 		return getLayer(numLayers() - 1);
+	}
+	
+	private void messing() {
 	}
 
 	/*
