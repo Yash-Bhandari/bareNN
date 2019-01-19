@@ -19,20 +19,25 @@ public class NeuralNet {
     private BlackBox blackBox;
     private double[][] trainingData;
     private double[][] trainingAnswers;
+    private double[][] testData;
+    private double[][] testAnswers;
     private double[] descent; // Gradient descent vector
     private double delta = 0.1; // Step size in gradient descent
     private int inputSize; // size of input layer
     private int outputSize; // size of output layer
     private int offset = 0;
-    private int numExamples = 1000;
+    private int numExamples = 50000;
     private final String savePath;
     private String trainingPath = "saves/digit/Data/mnist_train.csv";
+    private String testPath = "saves/digit/Data/mnist_train.csv";
 
     public NeuralNet(String savePath, int[] layers) {
         this.savePath = savePath + "/savedNet";
         // int[] params = { 4, 5 };
         blackBox = new BlackBox(layers, true);
-        getTrainingData(trainingPath);
+        inputSize = blackBox.inputSize();
+        outputSize = blackBox.outputSize();
+        getTrainingData();
         // System.out.println(cost());
         // blackBox.clearLayers();
         // blackBox.save(savePath);
@@ -45,17 +50,19 @@ public class NeuralNet {
         blackBox.clearLayers();
         inputSize = blackBox.inputSize();
         outputSize = blackBox.outputSize();
-        getTrainingData(trainingPath);
+        getTrainingData();
     }
 
-    private void getTrainingData(String path) {
-        Input in = new Input(new File(path));
-        double[] metaData = in.readLine();
+    private void getTrainingData() {
+        Input in = new Input(new File(trainingPath));
+        Input testIn = new Input(new File(testPath));
+
         // int numExamples = 600;// (int) metaData[0]; // Number of training examples
-        inputSize = (int) metaData[1];
-        outputSize = (int) metaData[2];
+        in.readLine();
         trainingData = new double[numExamples][];
         trainingAnswers = new double[numExamples][];
+        testData = new double[(int) testIn.readLine()[0]][];
+        testAnswers = new double[testData.length][];
         for (int i = 0; i < offset; i++)
             in.readLine();
         for (int i = 0; i < numExamples; i++) {
@@ -67,11 +74,23 @@ public class NeuralNet {
                 trainingData[i][j] = line[j] / 255;
             }
         }
+        for (int i = 0; i < testData.length; i++) {
+            double[] line = in.readLine();
+            testAnswers[i] = new double[outputSize];
+            testAnswers[i][(int) line[0]] = 1;
+            testData[i] = new double[inputSize];
+            for (int j = 1; j < inputSize; j++) {
+                testData[i][j] = line[j] / 255;
+            }
+        }
     }
 
-    public double[] eval(double[] input) {
+    public double[] eval(double[] input, boolean smooth) {
         assert input.length == inputSize;
-        return blackBox.eval(input);
+        if (!smooth)
+            return blackBox.eval(input);
+        else
+            return (smoothOutput(blackBox.eval(input)));
     }
 
     /**
@@ -88,10 +107,8 @@ public class NeuralNet {
     public int[] classify(double[][] inputs) {
         int[] classifications = new int[inputs.length];
         for (int i = 0; i < inputs.length; i++) {
-            double[] output = eval(Arrays.copyOfRange(inputs[i], 1, inputSize + 1));
-            for (int j = 0; j < output.length; j++)
-                if (output[j] > output[classifications[i]])
-                    classifications[i] = j;
+            double[] output = eval(Arrays.copyOfRange(inputs[i], 1, inputSize + 1), false);
+            classifications[i] = indexOfMax(output);
         }
         return classifications;
     }
@@ -105,7 +122,7 @@ public class NeuralNet {
         return cost(blackBox);
     }
 
-    public double cost(BlackBox box) {
+    private double cost(BlackBox box) {
         assert trainingAnswers.length == trainingData.length;
         double cost = 0;
         for (int i = 0; i < trainingData.length; i++) {
@@ -114,20 +131,48 @@ public class NeuralNet {
         }
         return cost;
     }
-    
+
+    public double testCost() {
+        double cost = 0;
+        for (int i = 0; i < testData.length; i++) {
+            cost += sqError(blackBox.eval(testData[i]), testAnswers[i]) / testData.length;
+            assert !Double.isNaN(cost);
+        }
+        return cost;
+    }
+
     public void backPropagation(int iterations, double[] stepSize, boolean saveBetweenLayers) {
         for (int i = 0; i < iterations; i++) {
             double initialCost = cost();
-            for (int j = 0; j < blackBox.numLayers() - 1; j++) {
+            for (int j = blackBox.numLayers()-2; j >= 0; j--) {
                 double[] gradient = gradientDescent(j);
                 double[] normalizedDescent = normalize(gradient, stepSize[j]);
+                double lastCost = initialCost;
                 blackBox.adjust(j, normalizedDescent);
                 double cost = cost();
-                System.out.println("Iteration " + i + " on layer " + j + " has a cost of " + cost);
-                if (cost < initialCost)
+                int numAdjustments = 0;
+                while (cost < lastCost) {
+                    blackBox.adjust(j, normalizedDescent);
+                    numAdjustments++;
+                    lastCost = cost;
+                    cost = cost();
+                }
+                System.out.println("Adjusted " + numAdjustments + " times");
+                blackBox.adjust(j, negative(normalizedDescent));
+
+                System.out.println("Iteration " + i + " on layer " + j + " has a cost of " + lastCost
+                        + " and a test cost of " + testCost());
+                if (lastCost < initialCost)
                     blackBox.save(savePath);
             }
         }
+    }
+    
+    //returns array with every element negative
+    private double[] negative (double[] input) {
+        for (int i = 0; i < input.length; i++)
+            input[i] = -1 * input[i];
+        return input;
     }
 
     public void save() {
@@ -136,6 +181,14 @@ public class NeuralNet {
 
     public void save(String altSavePath) {
         blackBox.save(altSavePath);
+    }
+
+    // Sets the highest value to 1, all others to 0
+    private double[] smoothOutput(double[] output) {
+        int indexOfMax = indexOfMax(output);
+        for (int i = 0; i < output.length; i++)
+            output[i] = i == indexOfMax ? 1 : 0;
+        return output;
     }
 
     // Returns a copy of the given vector rescaled to the given magnitude
@@ -155,10 +208,18 @@ public class NeuralNet {
         }
         return output;
     }
-    
+
+    private int indexOfMax(double[] input) {
+        int highest = 0;
+        for (int i = 0; i < input.length; i++)
+            if (input[i] > input[highest])
+                highest = i;
+        return highest;
+    }
+
     private int numNonZero(double[] input) {
         int numNonZero = 0;
-        for (double d: input)
+        for (double d : input)
             if (d != 0)
                 numNonZero++;
         return numNonZero;
@@ -171,65 +232,38 @@ public class NeuralNet {
 
         descent = new double[blackBox.getWeights(layer).length + blackBox.getBiases(layer).length];
         System.out.println("Starting descent on layer " + layer + " with " + descent.length + " weights");
-        int numThreads = 4;
+        int numThreads = 3;
         Thread[] threads = new Thread[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            threads[i] = new Thread(new descentThread(layer, i * descent.length / numThreads, (i+1) * descent.length / numThreads, initialCost, i));
+            threads[i] = new Thread(new descentThread(layer, i * descent.length / numThreads,
+                    (i + 1) * descent.length / numThreads, initialCost, i));
         }
-        
+
         for (Thread t : threads)
             t.start();
-        
-        for (Thread t: threads)
+
+        for (Thread t : threads)
             try {
                 t.join();
             } catch (InterruptedException e1) {
                 e1.printStackTrace();
             }
-        
-        /*Thread t1 = new Thread(new descentThread(layer, 0, descent.length / 4, initialCost, 1));
-        Thread t2 = new Thread(new descentThread(layer, descent.length / 4, descent.length / 2, initialCost, 2));
-        Thread t3 = new Thread(new descentThread(layer, descent.length / 2, 3 * descent.length / 4, initialCost, 3));
-        Thread t4 = new Thread(new descentThread(layer, 3 * descent.length / 4, descent.length, initialCost, 4));
-        t1.start();
-        t2.start();
-        t3.start();
-        t4.start();
 
-        try {
-            t1.join();
-            t2.join();
-            t3.join();
-            t4.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
-        System.out.println("Finished");
+        /*
+         * Thread t1 = new Thread(new descentThread(layer, 0, descent.length / 4,
+         * initialCost, 1)); Thread t2 = new Thread(new descentThread(layer,
+         * descent.length / 4, descent.length / 2, initialCost, 2)); Thread t3 = new
+         * Thread(new descentThread(layer, descent.length / 2, 3 * descent.length / 4,
+         * initialCost, 3)); Thread t4 = new Thread(new descentThread(layer, 3 *
+         * descent.length / 4, descent.length, initialCost, 4)); t1.start(); t2.start();
+         * t3.start(); t4.start();
+         * 
+         * try { t1.join(); t2.join(); t3.join(); t4.join(); } catch
+         * (InterruptedException e) { e.printStackTrace(); }
+         */
+        System.out.println("There were " + numNonZero(descent) + " non-zero changes");
         return descent;
 
-    }
-
-    public double[] descent(int layer) {
-        double initialCost = cost();
-        descent = new double[blackBox.getWeights(layer).length + blackBox.getBiases(layer).length];
-        for (int i = 0; i < descent.length; i++) {
-            if (i > 0 && i % 100 == 0)
-                System.out.println("finished weight " + i + " out of " + descent.length + " in layer " + layer);
-            blackBox.addToWeight(layer, i, delta);
-            double positiveChange = cost() - initialCost; // Testing increasing the weight
-            blackBox.addToWeight(layer, i, -2 * delta);
-            double negativeChange = cost() - initialCost; // Testing decreasing the weight
-            blackBox.addToWeight(layer, i, delta); // Returns to normal
-            if (positiveChange < 0 || negativeChange < 0) {
-                if (positiveChange < negativeChange)
-                    descent[i] = Math.abs(positiveChange);
-                else
-                    descent[i] = negativeChange;
-            } else
-                descent[i] = 0;
-        }
-
-        return descent;
     }
 
     public String getSaveLocation() {
@@ -268,7 +302,7 @@ public class NeuralNet {
 
         public void run() {
             for (int i = startIndex; i < endIndex; i++) {
-                if (threadNumber == 0 && (i - startIndex) % 100 == 0)
+                if (threadNumber == 0 && (i - startIndex) % 10 == 0)
                     System.out.println("finished weight " + (i - startIndex) + " out of " + (endIndex - startIndex)
                             + " in layer " + layer + " in thread " + threadNumber);
                 tempBox.addToWeight(layer, i, delta);

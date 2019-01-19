@@ -16,9 +16,7 @@ public class BlackBox {
 	private String path;
 
 	private ArrayList<double[]> layers;
-	private ArrayList<SimpleMatrix> layerVectors;
 	private ArrayList<double[]> weights;
-	private ArrayList<SimpleMatrix> transformations;
 	private ArrayList<double[]> biases;
 
 	private int inputSize; // size of input layer
@@ -40,8 +38,6 @@ public class BlackBox {
 		layers = new ArrayList<double[]>();
 		weights = new ArrayList<double[]>();
 		biases = new ArrayList<double[]>();
-		layerVectors = new ArrayList<SimpleMatrix>();
-		transformations = new ArrayList<SimpleMatrix>();
 
 		layers.add(in.readLine());
 		for (int i = 1; i < numLayers; i++) {
@@ -50,7 +46,6 @@ public class BlackBox {
 			layers.add(in.readLine());
 		}
 		
-		layerVectors.add(new SimpleMatrix(layers.get(0).length, 1, false, layers.get(0)));
 		for (int i = 1; i < layers.size(); i++) {
 			
 		}
@@ -197,6 +192,9 @@ public class BlackBox {
 		return output;
 	}
 
+	// I am well aware that this is reflected horizontally.
+	// It was a type made early on that all current saved neural nets were trained on
+	// The reflection over the y axis makes no real difference
 	private static double sigmoid(double input) {
 		return 1 / (1 + Math.exp(input));
 	}

@@ -18,7 +18,8 @@ public class App {
 		// int[] layers = { 784, 30, 10 };
 		// net = new NeuralNet("saves/digit", layers);
 		net = new NeuralNet("saves/digit/savedNet", 3);
-		System.out.println(net.cost());
+		System.out.println("Starting cost of " + net.cost());
+		System.out.println("Starting test cost of " + net.testCost());
 		//net.save();
 		//testMatrix();
 		// double[] image = ImageReader.readImage("saves/digit/images/seven.png");
@@ -38,13 +39,13 @@ public class App {
 
 	private static void trainNet() {
 		int oldCorrect = test(10000, false);
-		double[] stepSizes = { 0.3, 0.2 };
+		double[] stepSizes = { 0.01, 0.01 };
 		for (int i = 0; i < 3; i++) {
 			double initial = net.cost();
 			net.backPropagation(1, stepSizes, true);
 			double newCost = net.cost();
 			int correct = test(10000, false);
-			if (Double.isNaN(newCost) || newCost > initial || correct < oldCorrect)
+			if (Double.isNaN(newCost) || newCost > initial)
 				break;
 			else
 				net.save();
@@ -75,7 +76,7 @@ public class App {
 		System.out.println("The computer predicted " + numCorrect + " out of " + numTest + " correctly");
 		return numCorrect;
 	}
-
+	
 	private static void testMatrix() {
 		double[] vector = { 1, 3, 5, 1 };
 		double data[][] = new double[4][4];
