@@ -194,14 +194,12 @@ public class BlackBox {
     private double dNodeWrtWeight(int nodeLayer, int nodeIndex, int weightLayer, int weightIndex) {
         double nodeValue = nodeValue(nodeLayer, nodeIndex);
         if (nodeLayer == weightLayer + 1) {
-            int node = startNode(nodeLayer - 1, weightIndex);
-            //double startNodeValue = nodeValue(nodeLayer - 1, node);
             if (weightIndex >= numWeights(weightLayer)) // Bias
                 return sigmoidPrime(nodeValue);
             else
                 return sigmoidPrime(nodeValue) * nodeValue(nodeLayer - 1, startNode(nodeLayer - 1, weightIndex)); // Weight
         } else
-            return 1; // Placeholder
+            return Double.NaN; // Placeholder
     }
 
     // Derivative of the activation value of one node with respect to the activation value of another

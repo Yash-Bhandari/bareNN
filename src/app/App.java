@@ -1,13 +1,10 @@
 package app;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
 
 import org.ejml.simple.SimpleMatrix;
 
 import bareNN.NeuralNet;
-import io.ImageReader;
 import io.Input;
 
 public class App {
@@ -15,10 +12,10 @@ public class App {
 	static NeuralNet net;
 
 	public static void main(String[] args) throws Exception {
-		int[] layers = { 784, 10 };
-		net = new NeuralNet("saves/digit", layers);
+		//int[] layers = { 784, 10 };
+		//net = new NeuralNet("saves/digit", layers);
 		//net.save();
-	    //net = new NeuralNet("saves/digit/savedNet", 2);
+	    net = new NeuralNet("saves/digit/savedNet", 2);
 		test(10000, false);
 		System.out.println(net.cost());
 		//net.save();
@@ -27,6 +24,7 @@ public class App {
 		// System.out.println(Arrays.toString(image));
 		// System.out.println("The picture is of a " + net.classify(image));
 
+		
 		trainNet();
 		//net.save();
 		/*
@@ -44,10 +42,10 @@ public class App {
 	}
 
 	private static void trainNet() {
-		double[] learningRate = { 0.1, 0.1 };
+		double[] learningRate = { 0.1};
 		for (int i = 0; i < 1; i++) {
 			double initial = net.cost();
-			net.backPropagation(1000, learningRate, true);
+			net.backPropagation(100, learningRate, true);
 			double newCost = net.cost();
 			if (Double.isNaN(newCost) || newCost > initial)
 				break;
