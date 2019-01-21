@@ -18,6 +18,7 @@ public class App {
 	    net = new NeuralNet("saves/digit/savedNet", 2);
 		test(10000, false);
 		System.out.println(net.cost());
+		//test(20, true);
 		//net.save();
 		//testMatrix();
 		// double[] image = ImageReader.readImage("saves/digit/images/seven.png");
@@ -42,7 +43,7 @@ public class App {
 	}
 
 	private static void trainNet() {
-		double[] learningRate = { 0.1};
+		double[] learningRate = { 0.02};
 		for (int i = 0; i < 1; i++) {
 			double initial = net.cost();
 			net.backPropagation(100, learningRate, true);

@@ -194,6 +194,8 @@ public class BlackBox {
     private double dNodeWrtWeight(int nodeLayer, int nodeIndex, int weightLayer, int weightIndex) {
         double nodeValue = nodeValue(nodeLayer, nodeIndex);
         if (nodeLayer == weightLayer + 1) {
+            if (endNode(nodeLayer-1, weightIndex) != nodeIndex)
+                return 0;
             if (weightIndex >= numWeights(weightLayer)) // Bias
                 return sigmoidPrime(nodeValue);
             else

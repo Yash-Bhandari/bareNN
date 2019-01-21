@@ -12,12 +12,12 @@ public class NeuralNet {
     private double[][] trainingAnswers;
     private double[][] testData;
     private double[][] testAnswers;
-    private double[] descent; // Gradient descent vector
+    private double[] gradient; // Gradient descent vector
     private double delta = 0.1; // Step size in gradient descent
     private int inputSize; // size of input layer
     private int outputSize; // size of output layer
     private int offset = 0;
-    private int numExamples = 1; // Number of examples from the training data that will be used to train
+    private int numExamples = 60000; // Number of examples from the training data that will be used to train
     private int numThreads = 3;
     private final String savePath;
     private String trainingPath = "saves/digit/Data/mnist_train.csv";
@@ -201,28 +201,12 @@ public class NeuralNet {
     }
 
     private double[] gradient(int layer) {
+
         double[] gradient = new double[blackBox.numWeights(layer) + blackBox.numBiases(layer)];
-        for (int i = 0; i < numExamples; i++) {
-            blackBox.eval(trainingData[i]);
-            double[] exampleGradient = blackBox.weightDerivatives(trainingAnswers[i], 0);
-            for (int j = 0; j < exampleGradient.length; j++) {
-                gradient[j] += exampleGradient[j] / numExamples;
-            }
-        }
-        return gradient;
-    }
-
-    private double[] gradientDescent(int layer) {
-        double initialCost = cost();
-        // sign indicates direction to move variable, magnitude is how much it lowers
-        // cost.
-
-        descent = new double[blackBox.getWeights(layer).length + blackBox.getBiases(layer).length];
-        // System.out.println("Starting descent on layer " + layer + " with " + descent.length + " weights");
         Thread[] threads = new Thread[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            threads[i] = new Thread(new descentThread(layer, i * descent.length / numThreads,
-                    (i + 1) * descent.length / numThreads, initialCost, i));
+            threads[i] = new Thread(
+                    new descentThread(layer, i * numExamples / numThreads, (i + 1) * numExamples / numThreads, i));
         }
 
         for (Thread t : threads)
@@ -235,18 +219,7 @@ public class NeuralNet {
                 e1.printStackTrace();
             }
 
-        /*
-         * Thread t1 = new Thread(new descentThread(layer, 0, descent.length / 4, initialCost, 1)); Thread t2 = new
-         * Thread(new descentThread(layer, descent.length / 4, descent.length / 2, initialCost, 2)); Thread t3 = new
-         * Thread(new descentThread(layer, descent.length / 2, 3 * descent.length / 4, initialCost, 3)); Thread t4 = new
-         * Thread(new descentThread(layer, 3 * descent.length / 4, descent.length, initialCost, 4)); t1.start();
-         * t2.start(); t3.start(); t4.start();
-         * 
-         * try { t1.join(); t2.join(); t3.join(); t4.join(); } catch (InterruptedException e) { e.printStackTrace(); }
-         */
-        System.out.println("There were " + numNonZero(descent) + " non-zero changes");
-        return descent;
-
+        return gradient;
     }
 
     public String getSaveLocation() {
@@ -273,36 +246,24 @@ public class NeuralNet {
         double initialCost;
 
         // startIndex inclusive, endIndex exclusive
-        public descentThread(int layer, int startIndex, int endIndex, double initialCost, int threadNumber) {
+        public descentThread(int layer, int startIndex, int endIndex, int threadNumber) {
             tempBox = new BlackBox(savePath, blackBox.numLayers());
             this.layer = layer;
             this.index = startIndex;
             this.startIndex = startIndex;
             this.endIndex = endIndex;
             this.threadNumber = threadNumber;
-            this.initialCost = initialCost;
         }
 
         public void run() {
             for (int i = startIndex; i < endIndex; i++) {
-                if (threadNumber == 0 && (i - startIndex) % 300 == 0)
-                    System.out.println("finished weight " + (i - startIndex) + " out of " + (endIndex - startIndex)
-                            + " in layer " + layer + " in thread " + threadNumber);
-                tempBox.addToWeight(layer, i, delta);
-                double positiveChange = cost(tempBox) - initialCost; // Testing increasing the weight
-                tempBox.addToWeight(layer, i, -2 * delta);
-                double negativeChange = cost(tempBox) - initialCost; // Testing decreasing the weight
-                tempBox.addToWeight(layer, i, delta); // Returns to normal
-                if (positiveChange < 0 || negativeChange < 0) {
-                    if (positiveChange < negativeChange)
-                        descent[index] = Math.abs(positiveChange);
-                    else
-                        descent[i] = negativeChange;
-                } else
-                    descent[i] = 0;
+                tempBox.eval(trainingData[i]);
+                double[] exampleGradient = tempBox.weightDerivatives(trainingAnswers[i], 0);
+                for (int j = 0; j < exampleGradient.length; j++) {
+                    gradient[j] += exampleGradient[j] / numExamples;
+                }
             }
         }
-
     }
 
     /*
