@@ -205,8 +205,8 @@ public class NeuralNet {
         double[] gradient = new double[blackBox.numWeights(layer) + blackBox.numBiases(layer)];
         Thread[] threads = new Thread[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            threads[i] = new Thread(
-                    new descentThread(layer, i * numExamples / numThreads, (i + 1) * numExamples / numThreads, i));
+            threads[i] = new Thread(new descentThread(layer, i * numExamples / numThreads,
+                    (i + 1) * numExamples / numThreads, i, gradient));
         }
 
         for (Thread t : threads)
@@ -243,20 +243,23 @@ public class NeuralNet {
         int startIndex;
         int endIndex;
         int threadNumber;
-        double initialCost;
+        double[] gradient;
 
         // startIndex inclusive, endIndex exclusive
-        public descentThread(int layer, int startIndex, int endIndex, int threadNumber) {
+        public descentThread(int layer, int startIndex, int endIndex, int threadNumber, double[] gradient) {
             tempBox = new BlackBox(savePath, blackBox.numLayers());
             this.layer = layer;
             this.index = startIndex;
             this.startIndex = startIndex;
             this.endIndex = endIndex;
             this.threadNumber = threadNumber;
+            this.gradient = gradient;
         }
 
         public void run() {
             for (int i = startIndex; i < endIndex; i++) {
+                if (threadNumber == 0 && (i - startIndex) % 10000 == 0 && i != startIndex)
+                    System.out.println("On example " + (i - startIndex) + " out of " + (endIndex - startIndex));
                 tempBox.eval(trainingData[i]);
                 double[] exampleGradient = tempBox.weightDerivatives(trainingAnswers[i], 0);
                 for (int j = 0; j < exampleGradient.length; j++) {

@@ -43,7 +43,7 @@ public class App {
 	}
 
 	private static void trainNet() {
-		double[] learningRate = { 0.02};
+		double[] learningRate = { 0.05};
 		for (int i = 0; i < 1; i++) {
 			double initial = net.cost();
 			net.backPropagation(100, learningRate, true);
