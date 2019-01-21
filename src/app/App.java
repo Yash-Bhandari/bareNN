@@ -15,9 +15,9 @@ public class App {
 	static NeuralNet net;
 
 	public static void main(String[] args) throws Exception {
-		// int[] layers = { 784, 30, 10 };
-		// net = new NeuralNet("saves/digit", layers);
-		net = new NeuralNet("saves/digit/savedNet", 3);
+		int[] layers = { 784, 10 };
+		//net = new NeuralNet("saves/digit", layers);
+		net = new NeuralNet("saves/digit/savedNet", 2);
 		System.out.println("Starting cost of " + net.cost());
 		System.out.println("Starting test cost of " + net.testCost());
 		//net.save();
@@ -39,7 +39,7 @@ public class App {
 
 	private static void trainNet() {
 		int oldCorrect = test(10000, false);
-		double[] stepSizes = { 0.01, 0.01 };
+		double[] stepSizes = { 0.1, 0.1 };
 		for (int i = 0; i < 3; i++) {
 			double initial = net.cost();
 			net.backPropagation(1, stepSizes, true);

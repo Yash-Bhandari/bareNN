@@ -26,7 +26,7 @@ public class NeuralNet {
     private int inputSize; // size of input layer
     private int outputSize; // size of output layer
     private int offset = 0;
-    private int numExamples = 50000;
+    private int numExamples = 50;
     private final String savePath;
     private String trainingPath = "saves/digit/Data/mnist_train.csv";
     private String testPath = "saves/digit/Data/mnist_train.csv";
