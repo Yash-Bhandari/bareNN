@@ -15,11 +15,12 @@ public class App {
 	static NeuralNet net;
 
 	public static void main(String[] args) throws Exception {
-		// int[] layers = { 784, 30, 10 };
-		// net = new NeuralNet("saves/digit", layers);
-		net = new NeuralNet("saves/digit/savedNet", 3);
-		System.out.println("Starting cost of " + net.cost());
-		System.out.println("Starting test cost of " + net.testCost());
+		int[] layers = { 784, 10 };
+		net = new NeuralNet("saves/digit", layers);
+		//net.save();
+	    //net = new NeuralNet("saves/digit/savedNet", 2);
+		test(10000, false);
+		System.out.println(net.cost());
 		//net.save();
 		//testMatrix();
 		// double[] image = ImageReader.readImage("saves/digit/images/seven.png");
@@ -27,7 +28,7 @@ public class App {
 		// System.out.println("The picture is of a " + net.classify(image));
 
 		trainNet();
-		// test(0, true);
+		//net.save();
 		/*
 		 * Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
 		 * in.readLine(); try { for (int i = 0; i < 30; i++) ImageReader.writeImage(28,
@@ -36,15 +37,18 @@ public class App {
 		 * e.printStackTrace(); }
 		 */
 	}
+	
+	private static void startStatus() {
+        System.out.println("Starting cost of " + net.cost());
+        System.out.println("Starting test cost of " + net.testCost());
+	}
 
 	private static void trainNet() {
-		int oldCorrect = test(10000, false);
-		double[] stepSizes = { 0.01, 0.01 };
-		for (int i = 0; i < 3; i++) {
+		double[] learningRate = { 0.1, 0.1 };
+		for (int i = 0; i < 1; i++) {
 			double initial = net.cost();
-			net.backPropagation(1, stepSizes, true);
+			net.backPropagation(1000, learningRate, true);
 			double newCost = net.cost();
-			int correct = test(10000, false);
 			if (Double.isNaN(newCost) || newCost > initial)
 				break;
 			else
