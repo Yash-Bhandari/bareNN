@@ -21,7 +21,7 @@ public class ImageReader {
 		return output;
 	}
 
-	public static void writeImage(int width, int height, int[] pixels, String savePath) throws IOException {
+	public static void saveImage(int width, int height, int[] pixels, String savePath) throws IOException {
 		BufferedImage img = ImageIO.read(new File("saves/digit/images/read1.png"));
 		System.out.println(pixels.length);
 		WritableRaster raster = img.getRaster();

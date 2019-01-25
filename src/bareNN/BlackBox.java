@@ -70,6 +70,9 @@ public class BlackBox {
             evalLayer(i);
         // for (double d : outputLayer())
         // assert !Double.isNaN(d);
+        double sum = 0;
+        for (double d : outputLayer())
+            sum += d;
         return outputLayer();
     }
 
@@ -79,8 +82,12 @@ public class BlackBox {
         addBiases(layer);
         for (double d : getLayer(layer + 1))
             assert !Double.isNaN(d);
+
         for (int i = 0; i < getLayer(layer + 1).length; i++)
-            setNode(layer + 1, i, sigmoid(nodeValue(layer + 1, i))); // Final transformation of answer
+            setNode(layer + 1, i, sigmoid(nodeValue(layer + 1, i)));
+
+        if (layer == numLayers() - 2)
+            setLayer(layer + 1, softMax(getLayer(layer + 1))); // Final transformation of answer
     }
 
     public void evalNode(int layer, int node) {
@@ -156,8 +163,8 @@ public class BlackBox {
         for (int i = 0; i < numLayers() - 1; i++) {
             for (int k = 0; k < layerSize(i + 1); k++) {
                 for (int j = 0; j < layerSize(i); j++)
-                    setWeight(i, j, k, r.nextDouble() / 10);
-                setBias(i, k, r.nextDouble() / 10);
+                    setWeight(i, j, k, r.nextDouble() / 20);
+                setBias(i, k, r.nextDouble() / 20);
             }
         }
     }
@@ -165,12 +172,27 @@ public class BlackBox {
     // Returns the partial derivatives of the cost with respect to all of the weights connecting from startLayer to
     // startLayer+1 for the input that was last evaluated
     public double[] weightDerivatives(double[] answers, int startLayer) {
+        double[][] dSoftMax = softMaxPrime();
+
         assert answers.length == outputSize();
         double[] derivatives = new double[numWeights(startLayer) + numBiases(startLayer)];
-        for (int i = 0; i < derivatives.length; i++) {
-            derivatives[i] = dCostWrtWeight(answers, startLayer, i);
+        for (int weightIndex = 0; weightIndex < derivatives.length; weightIndex++) {
+            for (int i = 0; i < outputSize(); i++) {
+                for (int j = 0; j < outputSize(); j++) {
+                    derivatives[weightIndex] += 2 * (answers[i] - outputLayer()[i]) * dSoftMax[i][j]
+                            * dNodeWrtWeight(startLayer + 1, j, startLayer, weightIndex, true);
+                }
+            }
         }
         return derivatives;
+        /*
+         * for (int i = 0; i < derivatives.length; i++) { derivatives[i] = dCostWrtWeight(answers, startLayer, i); }
+         * return derivatives;
+         */
+    }
+    
+    private double[] dLayerWrtWeight () {
+        
     }
 
     // Derivative of the total cost with respect to a certain weight
@@ -186,22 +208,26 @@ public class BlackBox {
     // Derivative of the cost of a single output node with respect to a certain weight
     private double dOutputCostWrtWeight(int outputNode, double answer, int weightLayer, int weightIndex) {
         double dCostWrtNode = 2 * (answer - outputLayer()[outputNode]);
-        double dNodeWrtWeight = dNodeWrtWeight(numLayers() - 1, outputNode, weightLayer, weightIndex);
+        double dNodeWrtWeight = dNodeWrtWeight(numLayers() - 1, outputNode, weightLayer, weightIndex, true);
         return dCostWrtNode * dNodeWrtWeight;
     }
 
-    // Derivative of the activation value of a node with respect to a certain weight
-    private double dNodeWrtWeight(int nodeLayer, int nodeIndex, int weightLayer, int weightIndex) {
+    // Derivative of the activation or raw value of a node with respect to a certain weight
+    private double dNodeWrtWeight(int nodeLayer, int nodeIndex, int weightLayer, int weightIndex, boolean activated) {
         double nodeValue = nodeValue(nodeLayer, nodeIndex);
         if (nodeLayer == weightLayer + 1) {
-            if (endNode(nodeLayer-1, weightIndex) != nodeIndex)
+            if (endNode(nodeLayer - 1, weightIndex) != nodeIndex)
                 return 0;
             if (weightIndex >= numWeights(weightLayer)) // Bias
-                return sigmoidPrime(nodeValue);
-            else
+                return activated ? sigmoidPrime(nodeValue) : nodeValue;
+            if (activated)
                 return sigmoidPrime(nodeValue) * nodeValue(nodeLayer - 1, startNode(nodeLayer - 1, weightIndex)); // Weight
-        } else
+            else
+                return nodeValue(nodeLayer - 1, startNode(nodeLayer - 1, weightIndex));
+        } else {
+            assert 2 == 1;
             return Double.NaN; // Placeholder
+        }
     }
 
     // Derivative of the activation value of one node with respect to the activation value of another
@@ -212,7 +238,20 @@ public class BlackBox {
             return 999999999; // Placeholder
     }
 
-    private static double sigmoid(double input) {
+    // Returns an 2d array where the i,j index is the partial derivative of the activation value
+    // of the ith output node with respect to the raw value of the jth output node
+    private double[][] softMaxPrime() {
+        double[][] derivatives = new double[outputSize()][outputSize()];
+        for (int i = 0; i < derivatives.length; i++) {
+            for (int j = 0; j < derivatives.length; j++) {
+                double delta = (i == j) ? 1 : 0;
+                derivatives[i][j] = outputLayer()[i] * (delta - outputLayer()[j]);
+            }
+        }
+        return derivatives;
+    }
+
+    private double sigmoid(double input) {
         return 1 / (1 + Math.exp(-1 * input));
     }
 
@@ -223,11 +262,11 @@ public class BlackBox {
      *            f(x), not x
      * @return f'(x)
      */
-    private static double sigmoidPrime(double input) {
+    private double sigmoidPrime(double input) {
         return input - input * input;
     }
 
-    private static double[] softMax(double[] input) {
+    private double[] softMax(double[] input) {
         double[] out = new double[input.length];
         double divisor = 0;
         for (double d : input) {
@@ -275,12 +314,12 @@ public class BlackBox {
 
     // Returns the starting node corresponding to a given weight
     private int startNode(int startLayer, int weightIndex) {
-        return weightIndex / layerSize(startLayer+1);
+        return weightIndex / layerSize(startLayer + 1);
     }
 
     // Returns the ending node correspoinding to a given weight
     private int endNode(int startLayer, int weightIndex) {
-        return weightIndex % layerSize(startLayer+1);
+        return weightIndex % layerSize(startLayer + 1);
     }
 
     /**

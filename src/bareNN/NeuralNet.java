@@ -17,8 +17,8 @@ public class NeuralNet {
     private int inputSize; // size of input layer
     private int outputSize; // size of output layer
     private int offset = 0;
-    private int numExamples = 60000; // Number of examples from the training data that will be used to train
-    private int numThreads = 3;
+    private int numExamples = 5000; // Number of examples from the training data that will be used to train
+    private int numThreads = 4;
     private final String savePath;
     private String trainingPath = "saves/digit/Data/mnist_train.csv";
     private String testPath = "saves/digit/Data/mnist_test.csv";
@@ -138,8 +138,6 @@ public class NeuralNet {
                 blackBox.adjust(layer, normalizedGradient);
                 double cost = cost();
                 System.out.println("Iteration " + i + " has a cost of " + cost);
-                if (cost < initialCost)
-                    blackBox.save(savePath);
             }
         }
     }
