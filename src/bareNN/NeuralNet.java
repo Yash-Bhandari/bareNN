@@ -134,7 +134,7 @@ public class NeuralNet {
             double initialCost = cost();
             for (int layer = blackBox.numLayers() - 2; layer >= 0; layer--) {
                 double[] normalizedGradient = normalize(gradient(layer), learningRate[layer]);
-                System.out.println("There are " + numNonZero(normalizedGradient) + " changes");
+                //System.out.println("There are " + numNonZero(normalizedGradient) + " changes");
                 blackBox.adjust(layer, normalizedGradient);
                 double cost = cost();
                 System.out.println("Iteration " + i + " has a cost of " + cost);

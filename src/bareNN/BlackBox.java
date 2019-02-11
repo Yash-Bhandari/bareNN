@@ -86,8 +86,10 @@ public class BlackBox {
         for (int i = 0; i < getLayer(layer + 1).length; i++)
             setNode(layer + 1, i, sigmoid(nodeValue(layer + 1, i)));
 
-        if (layer == numLayers() - 2)
-            setLayer(layer + 1, softMax(getLayer(layer + 1))); // Final transformation of answer
+        /*
+         * if (layer == numLayers() - 2) setLayer(layer + 1, softMax(getLayer(layer + 1))); // Final transformation of
+         * answer
+         */
     }
 
     public void evalNode(int layer, int node) {
@@ -168,31 +170,28 @@ public class BlackBox {
             }
         }
     }
+    
+    public double[][] allDerivatives(double[] answers) {
+        double[][] derivatives = new double[numLayers()-1][];
+        double[] lastNodeDerivatives = new double[layerSize(numLayers()-1)];
+        for (int i = derivatives.length; i >= 0; i--) {
+            
+        }
+        return derivatives;
+        
+    }
 
     // Returns the partial derivatives of the cost with respect to all of the weights connecting from startLayer to
     // startLayer+1 for the input that was last evaluated
     public double[] weightDerivatives(double[] answers, int startLayer) {
         double[][] dSoftMax = softMaxPrime();
 
-        assert answers.length == outputSize();
         double[] derivatives = new double[numWeights(startLayer) + numBiases(startLayer)];
-        for (int weightIndex = 0; weightIndex < derivatives.length; weightIndex++) {
-            for (int i = 0; i < outputSize(); i++) {
-                for (int j = 0; j < outputSize(); j++) {
-                    derivatives[weightIndex] += 2 * (answers[i] - outputLayer()[i]) * dSoftMax[i][j]
-                            * dNodeWrtWeight(startLayer + 1, j, startLayer, weightIndex, true);
-                }
-            }
+        for (int i = 0; i < derivatives.length; i++) {
+            derivatives[i] = dCostWrtWeight(answers, startLayer, i);
         }
         return derivatives;
-        /*
-         * for (int i = 0; i < derivatives.length; i++) { derivatives[i] = dCostWrtWeight(answers, startLayer, i); }
-         * return derivatives;
-         */
-    }
-    
-    private double[] dLayerWrtWeight () {
-        
+
     }
 
     // Derivative of the total cost with respect to a certain weight
@@ -225,17 +224,22 @@ public class BlackBox {
             else
                 return nodeValue(nodeLayer - 1, startNode(nodeLayer - 1, weightIndex));
         } else {
+            double derivative = 0;
             assert 2 == 1;
             return Double.NaN; // Placeholder
         }
     }
 
     // Derivative of the activation value of one node with respect to the activation value of another
-    private double dNode1WRTNode2(int node1, int layer1, int node2, int layer2) {
+    private double dNode1WrtNode2(int node1, int layer1, int node2, int layer2) {
         if (layer1 == layer2 + 1)
             return sigmoidPrime(nodeValue(layer1, node1)) * getWeight(layer2, node2, node1);
         else
             return 999999999; // Placeholder
+    }
+    
+    private double dCostWrtNode(int node, int layer, double[] priorDerivatives) {
+        return 4;
     }
 
     // Returns an 2d array where the i,j index is the partial derivative of the activation value

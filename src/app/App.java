@@ -16,13 +16,15 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         int[] layers = { 784, 10 };
-        //net = new NeuralNet("saves/digit", layers);
+        net = new NeuralNet("saves/digit", layers);
         // net.save();
-        net = new NeuralNet("saves/digit/savedNet", 2);
+        //net = new NeuralNet("saves/digit/savedNet", 2);
         System.out.println(net.cost());
         test(10000, false);
+        //test(200, true);
+        //writeImages("saves/digit/images/testing/");
         // System.out.println(net.cost());
-        // parseImage("saves/digit/images/thisIsAThree.png");
+        //parseImage("saves/digit/images/thisIsAnEight.png");
         // writeImages("saves/digit/images/training/");
         // System.out.println(net.testCost());
         trainNet();
@@ -44,7 +46,8 @@ public class App {
     }
 
     private static void writeImages(String folderPath) {
-        Input in = new Input(new File("saves/digit/Data/mnist_train.csv"));
+        Input in = new Input(new File("saves/digit/Data/mnist_test.csv"));
+        in.readLine();
         try {
             for (int i = 0; i < 400; i++) {
                 ImageReader.saveImage(28, 28, Arrays.copyOfRange(in.readLineInt(), 1, 785),
