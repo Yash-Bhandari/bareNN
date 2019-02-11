@@ -172,7 +172,8 @@ public class BlackBox {
     }
 
     public double[][] getGradient(double[] answers) {
-        return dCostWrtWeights(answers, dCostWrtNodes(answers));
+        double[][] dCostWrtNodes = dCostWrtNodes(answers);
+        return dCostWrtWeights(answers, dCostWrtNodes);
     }
 
     // Returns the partial derivatives of the cost w.r.t. the pre-activation values of each node in the network.
@@ -194,9 +195,9 @@ public class BlackBox {
     private double[] dCostWrtLayer(int startLayer, double[] dCostWrtEndLayer) {
         double[] output = new double[layerSize(startLayer)];
         for (int startNode = 0; startNode < output.length; startNode++) {
-            double startNodeValue = nodeValue(startLayer, startNode);
+            double dStartNodeActivation = sigmoidPrime(nodeValue(startLayer, startNode));
             for (int endNode = 0; endNode < layerSize(startLayer + 1); endNode++)
-                output[startNode] += sigmoidPrime(startNodeValue) * getWeight(startLayer, startNode, endNode);
+                output[startNode] += dStartNodeActivation * getWeight(startLayer, startNode, endNode);
         }
         return output;
     }
@@ -217,6 +218,7 @@ public class BlackBox {
         return output;
     }
 
+    
     // Returns the partial derivatives of the cost with respect to all of the weights connecting from startLayer to
     // startLayer+1 for the input that was last evaluated
     public double[] weightDerivatives(double[] answers, int startLayer) {
@@ -265,6 +267,7 @@ public class BlackBox {
             return Double.NaN; // Placeholder
         }
     }
+    
 
     // Derivative of the activation value of one node with respect to the activation value of another
     private double dNode1WrtNode2(int node1, int layer1, int node2, int layer2) {
@@ -272,10 +275,6 @@ public class BlackBox {
             return sigmoidPrime(nodeValue(layer1, node1)) * getWeight(layer2, node2, node1);
         else
             return 999999999; // Placeholder
-    }
-
-    private double dCostWrtNode(int node, int layer, double[] priorDerivatives) {
-        return 4;
     }
 
     // Returns an 2d array where the i,j index is the partial derivative of the activation value

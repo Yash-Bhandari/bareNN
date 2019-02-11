@@ -15,7 +15,7 @@ public class App {
     static NeuralNet net;
 
     public static void main(String[] args) throws Exception {
-        int[] layers = { 784, 10 };
+        int[] layers = { 784, 200, 10 };
         net = new NeuralNet("saves/digit", layers);
         // net.save();
         //net = new NeuralNet("saves/digit/savedNet", 2);
