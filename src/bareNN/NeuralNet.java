@@ -267,7 +267,7 @@ public class NeuralNet {
                 if (threadNumber == 0 && (i - startIndex) % 10000 == 0 && i != startIndex)
                     System.out.println("On example " + (i - startIndex) + " out of " + (endIndex - startIndex));
                 tempBox.eval(trainingData[i]);
-                double[][] exampleGradient = tempBox.getGradient(testAnswers[i]);
+                double[][] exampleGradient = tempBox.getGradient(trainingAnswers[i]);
                 for (int k = 0; k < exampleGradient.length; k++)
                     for (int j = 0; j < exampleGradient[k].length; j++) {
                         gradient[k][j] += exampleGradient[k][j] / numExamples;
