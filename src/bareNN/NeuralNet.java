@@ -3,6 +3,8 @@ package bareNN;
 import java.io.File;
 import java.util.Arrays;
 
+import javax.print.attribute.standard.NumberOfInterveningJobs;
+
 import io.Input;
 
 public class NeuralNet {
@@ -12,7 +14,6 @@ public class NeuralNet {
     private double[][] trainingAnswers;
     private double[][] testData;
     private double[][] testAnswers;
-    private double[] gradient; // Gradient descent vector
     private double delta = 0.1; // Step size in gradient descent
     private int inputSize; // size of input layer
     private int outputSize; // size of output layer
@@ -132,13 +133,12 @@ public class NeuralNet {
     public void backPropagation(int iterations, double[] learningRate, boolean saveBetweenLayers) {
         for (int i = 0; i < iterations; i++) {
             double initialCost = cost();
-            for (int layer = blackBox.numLayers() - 2; layer >= 0; layer--) {
-                double[] normalizedGradient = normalize(gradient(layer), learningRate[layer]);
-                //System.out.println("There are " + numNonZero(normalizedGradient) + " changes");
-                blackBox.adjust(layer, normalizedGradient);
-                double cost = cost();
-                System.out.println("Iteration " + i + " has a cost of " + cost);
-            }
+            double[][] normalizedGradient = normalize(gradient(), learningRate[0]);
+            // System.out.println("There are " + numNonZero(normalizedGradient) + " changes");
+            for (int layer = 0; layer < normalizedGradient.length; layer++)
+                blackBox.adjust(layer, normalizedGradient[layer]);
+            double cost = cost();
+            System.out.println("Iteration " + i + " has a cost of " + cost);
         }
     }
 
@@ -182,6 +182,14 @@ public class NeuralNet {
         return output;
     }
 
+    // Returns a copy of the given matrix with each composite vector rescaled to the given magnitude
+    private double[][] normalize(double[][] matrix, double magnitude) {
+        double[][] output = new double[matrix.length][];
+        for (int i = 0; i < output.length; i++)
+            output[i] = normalize(matrix[i], magnitude);
+        return output;
+    }
+
     private int indexOfMax(double[] input) {
         int highest = 0;
         for (int i = 0; i < input.length; i++)
@@ -198,13 +206,15 @@ public class NeuralNet {
         return numNonZero;
     }
 
-    private double[] gradient(int layer) {
+    private double[][] gradient() {
 
-        double[] gradient = new double[blackBox.numWeights(layer) + blackBox.numBiases(layer)];
+        double[][] gradient = new double[blackBox.numLayers() - 1][];
+        for (int i = 0; i < gradient.length; i++)
+            gradient[i] = new double[blackBox.numWeights(i) + blackBox.numBiases(i)];
         Thread[] threads = new Thread[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            threads[i] = new Thread(new descentThread(layer, i * numExamples / numThreads,
-                    (i + 1) * numExamples / numThreads, i, gradient));
+            threads[i] = new Thread(
+                    new descentThread(i * numExamples / numThreads, (i + 1) * numExamples / numThreads, i, gradient));
         }
 
         for (Thread t : threads)
@@ -236,17 +246,15 @@ public class NeuralNet {
 
     private class descentThread implements Runnable {
         BlackBox tempBox;
-        int layer;
         int index;
         int startIndex;
         int endIndex;
         int threadNumber;
-        double[] gradient;
+        double[][] gradient;
 
         // startIndex inclusive, endIndex exclusive
-        public descentThread(int layer, int startIndex, int endIndex, int threadNumber, double[] gradient) {
+        public descentThread(int startIndex, int endIndex, int threadNumber, double[][] gradient) {
             tempBox = new BlackBox(savePath, blackBox.numLayers());
-            this.layer = layer;
             this.index = startIndex;
             this.startIndex = startIndex;
             this.endIndex = endIndex;
@@ -259,10 +267,11 @@ public class NeuralNet {
                 if (threadNumber == 0 && (i - startIndex) % 10000 == 0 && i != startIndex)
                     System.out.println("On example " + (i - startIndex) + " out of " + (endIndex - startIndex));
                 tempBox.eval(trainingData[i]);
-                double[] exampleGradient = tempBox.weightDerivatives(trainingAnswers[i], 0);
-                for (int j = 0; j < exampleGradient.length; j++) {
-                    gradient[j] += exampleGradient[j] / numExamples;
-                }
+                double[][] exampleGradient = tempBox.getGradient(testAnswers[i]);
+                for (int k = 0; k < exampleGradient.length; k++)
+                    for (int j = 0; j < exampleGradient[k].length; j++) {
+                        gradient[k][j] += exampleGradient[k][j] / numExamples;
+                    }
             }
         }
     }

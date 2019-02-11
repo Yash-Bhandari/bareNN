@@ -170,15 +170,51 @@ public class BlackBox {
             }
         }
     }
-    
-    public double[][] allDerivatives(double[] answers) {
-        double[][] derivatives = new double[numLayers()-1][];
-        double[] lastNodeDerivatives = new double[layerSize(numLayers()-1)];
-        for (int i = derivatives.length; i >= 0; i--) {
-            
-        }
-        return derivatives;
+
+    public double[][] getGradient(double[] answers) {
+        return dCostWrtWeights(answers, dCostWrtNodes(answers));
+    }
+
+    // Returns the partial derivatives of the cost w.r.t. the pre-activation values of each node in the network.
+    // The i,jth index corresponds to the derivative of the cost w.r.t. the jth node in the ith layer
+    private double[][] dCostWrtNodes(double[] answers) {
+        double[][] dCostWrtNodes = new double[numLayers()][];
+        dCostWrtNodes[numLayers()-1] = new double[outputSize()];
+
+        for (int i = 0; i < dCostWrtNodes[numLayers()-1].length; i++)
+            dCostWrtNodes[numLayers() - 1][i] = 2 * (answers[i] - outputLayer()[i]) * sigmoidPrime(outputLayer()[i]);
+
+        for (int layer = numLayers()-2; layer >= 1; layer--)
+            dCostWrtNodes[layer] = dCostWrtLayer(layer, dCostWrtNodes[layer+1]);
         
+        return dCostWrtNodes;
+    }
+
+    // Returns the partial derivatives of the cost w.r.t. the pre-activation values of each node in the startLayer
+    private double[] dCostWrtLayer(int startLayer, double[] dCostWrtEndLayer) {
+        double[] output = new double[layerSize(startLayer)];
+        for (int startNode = 0; startNode < output.length; startNode++) {
+            double startNodeValue = nodeValue(startLayer, startNode);
+            for (int endNode = 0; endNode < layerSize(startLayer + 1); endNode++)
+                output[startNode] += sigmoidPrime(startNodeValue) * getWeight(startLayer, startNode, endNode);
+        }
+        return output;
+    }
+
+    // Returns matrix where the i,jth index corresponds to the partial derivative of the cost w.r.t. the jth weight
+    // connecting from the ith layer to the i+1th layer.
+    private double[][] dCostWrtWeights(double[] answers, double[][] dCostWrtNodes) {
+        double[][] output = new double[numLayers() - 1][];
+        for (int i = 0; i < output.length; i++) {
+            output[i] = new double[numWeights(i) + numBiases(i)];
+            for (int j = 0; j < output[i].length; j++) {
+                if (j < numWeights(i))
+                    output[i][j] = nodeValue(i, startNode(i, j)) * dCostWrtNodes[i+1][endNode(i, j)];
+                else 
+                    output[i][j] = dCostWrtNodes[i+1][endNode(i, j)];
+            }
+        }
+        return output;
     }
 
     // Returns the partial derivatives of the cost with respect to all of the weights connecting from startLayer to
@@ -224,7 +260,7 @@ public class BlackBox {
             else
                 return nodeValue(nodeLayer - 1, startNode(nodeLayer - 1, weightIndex));
         } else {
-            double derivative = 0;
+            double derivative = activated ? sigmoidPrime(nodeValue(nodeLayer, nodeIndex)) : 1;
             assert 2 == 1;
             return Double.NaN; // Placeholder
         }
@@ -237,7 +273,7 @@ public class BlackBox {
         else
             return 999999999; // Placeholder
     }
-    
+
     private double dCostWrtNode(int node, int layer, double[] priorDerivatives) {
         return 4;
     }
