@@ -20,11 +20,11 @@ public class App {
         // net.save();
         net = new NeuralNet("saves/digit/savedNet", 2);
         System.out.println(net.cost());
-        test(10000, false);
+        //test(10000, false);
         test(200, true);
         //writeImages("saves/digit/images/testing/");
         // System.out.println(net.cost());
-        //parseImage("saves/digit/images/thisIsAnEight.png");
+        //parseImage("saves/digit/images/sampleEight.png");
         // writeImages("saves/digit/images/training/");
         // System.out.println(net.testCost());
         trainNet();
@@ -64,12 +64,12 @@ public class App {
     }
 
     private static void trainNet() {
-        double[] learningRate = { 0.01};
+        double[] learningRate = { 0.04};
         for (int i = 0; i < 300; i++) {
             double initial = net.cost();
             net.backPropagation(1, learningRate, true);
             double newCost = net.cost();
-            if (i % 5 == 0)
+            if (i % 2 == 0)
                 test(10000, false);
             /*if (Double.isNaN(newCost) || newCost > initial)
                 break;
