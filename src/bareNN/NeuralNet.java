@@ -98,6 +98,8 @@ public class NeuralNet {
     public int[] classify(double[][] inputs) {
         int[] classifications = new int[inputs.length];
         for (int i = 0; i < inputs.length; i++) {
+            for (double d : Arrays.copyOfRange(inputs[i], 1, inputSize + 1))
+                assert d <= 1;
             double[] output = eval(Arrays.copyOfRange(inputs[i], 1, inputSize + 1), false);
             classifications[i] = indexOfMax(output);
         }
@@ -117,6 +119,8 @@ public class NeuralNet {
         assert trainingAnswers.length == trainingData.length;
         double cost = 0;
         for (int i = 0; i < trainingData.length; i++) {
+            for (double d : trainingData[i])
+                assert d <= 1;
             cost += sqError(box.eval(trainingData[i]), trainingAnswers[i]) / trainingData.length;
         }
         return cost;
@@ -182,11 +186,27 @@ public class NeuralNet {
         return output;
     }
 
-    // Returns a copy of the given matrix with each composite vector rescaled to the given magnitude
+    // Returns a copy of the given matrix rescaled to the given magnitude
     private double[][] normalize(double[][] matrix, double magnitude) {
+        // Flattening matrix
+        int size = 0;
+        for (double[] a : matrix)
+            size += a.length;
+        double[] temp = new double[size];
+        int offset = 0;
+        for (double[] a : matrix) {
+            for (int j = 0; j < a.length; j++)
+                temp[offset+j] = a[j];
+            offset += a.length;
+        }
+        temp = normalize(temp, magnitude); // normalizing
+        
         double[][] output = new double[matrix.length][];
-        for (int i = 0; i < output.length; i++)
-            output[i] = normalize(matrix[i], magnitude);
+        offset = 0;
+        for (int i = 0; i < output.length; i++) {
+            output[i] = Arrays.copyOfRange(temp, offset, offset + matrix[i].length);
+            offset += matrix[i].length;
+        }
         return output;
     }
 

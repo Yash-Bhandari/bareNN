@@ -15,13 +15,13 @@ public class App {
     static NeuralNet net;
 
     public static void main(String[] args) throws Exception {
-        int[] layers = { 784, 100, 10 };
+        int[] layers = { 784, 10 };
         net = new NeuralNet("saves/digit", layers);
         // net.save();
         //net = new NeuralNet("saves/digit/savedNet", 2);
         System.out.println(net.cost());
         test(10000, false);
-        //test(200, true);
+        test(200, true);
         //writeImages("saves/digit/images/testing/");
         // System.out.println(net.cost());
         //parseImage("saves/digit/images/thisIsAnEight.png");
@@ -64,12 +64,12 @@ public class App {
     }
 
     private static void trainNet() {
-        double[] learningRate = { 0.2};
+        double[] learningRate = { 0.1};
         for (int i = 0; i < 300; i++) {
             double initial = net.cost();
             net.backPropagation(1, learningRate, true);
             double newCost = net.cost();
-            if (i % 10 == 0)
+            if (i % 5 == 0)
                 test(10000, false);
             /*if (Double.isNaN(newCost) || newCost > initial)
                 break;

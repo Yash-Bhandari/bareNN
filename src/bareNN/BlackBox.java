@@ -64,6 +64,8 @@ public class BlackBox {
 
     public double[] eval(double[] input) {
         assert input.length == inputSize();
+        for (double d : input)
+            assert d <= 1;
         clearLayers();
         setLayer(0, input);
         for (int i = 0; i < numLayers() - 1; i++)
@@ -83,13 +85,11 @@ public class BlackBox {
         for (double d : getLayer(layer + 1))
             assert !Double.isNaN(d);
 
-        for (int i = 0; i < getLayer(layer + 1).length; i++)
-            setNode(layer + 1, i, sigmoid(nodeValue(layer + 1, i)));
+        // for (int i = 0; i < getLayer(layer + 1).length; i++)
+        // setNode(layer + 1, i, sigmoid(nodeValue(layer + 1, i)));
 
-        /*
-         * if (layer == numLayers() - 2) setLayer(layer + 1, softMax(getLayer(layer + 1))); // Final transformation of
-         * answer
-         */
+        if (layer == numLayers() - 2)
+            setLayer(layer + 1, softMax(getLayer(layer + 1))); // Final transformation of answer
     }
 
     public void evalNode(int layer, int node) {
@@ -161,12 +161,13 @@ public class BlackBox {
 
     // Populates weights and biases in matrix with random values near 0
     private void populate() {
+        double x = 0.1;
         Random r = new Random();
         for (int i = 0; i < numLayers() - 1; i++) {
             for (int k = 0; k < layerSize(i + 1); k++) {
                 for (int j = 0; j < layerSize(i); j++)
-                    setWeight(i, j, k, r.nextDouble() / 20);
-                setBias(i, k, r.nextDouble() / 20);
+                    setWeight(i, j, k, r.nextDouble() * x - (x / 2));
+                setBias(i, k, r.nextDouble() * x - (x / 2));
             }
         }
     }
@@ -180,14 +181,15 @@ public class BlackBox {
     // The i,jth index corresponds to the derivative of the cost w.r.t. the jth node in the ith layer
     private double[][] dCostWrtNodes(double[] answers) {
         double[][] dCostWrtNodes = new double[numLayers()][];
-        dCostWrtNodes[numLayers()-1] = new double[outputSize()];
+        dCostWrtNodes[numLayers() - 1] = new double[outputSize()];
 
-        for (int i = 0; i < dCostWrtNodes[numLayers()-1].length; i++)
-            dCostWrtNodes[numLayers() - 1][i] = 2 * (answers[i] - outputLayer()[i]) * sigmoidPrime(outputLayer()[i]);
+        dCostWrtNodes[numLayers()-1] = temp(answers);
+        for (int i = 0; i < dCostWrtNodes[numLayers() - 1].length; i++);
+            //dCostWrtNodes[numLayers() - 1][i] = 2 * (answers[i] - outputLayer()[i]) * sigmoidPrime(outputLayer()[i]);
 
-        for (int layer = numLayers()-2; layer >= 1; layer--)
-            dCostWrtNodes[layer] = dCostWrtLayer(layer, dCostWrtNodes[layer+1]);
-        
+        for (int layer = numLayers() - 2; layer >= 1; layer--)
+            dCostWrtNodes[layer] = dCostWrtLayer(layer, dCostWrtNodes[layer + 1]);
+
         return dCostWrtNodes;
     }
 
@@ -210,15 +212,14 @@ public class BlackBox {
             output[i] = new double[numWeights(i) + numBiases(i)];
             for (int j = 0; j < output[i].length; j++) {
                 if (j < numWeights(i))
-                    output[i][j] = nodeValue(i, startNode(i, j)) * dCostWrtNodes[i+1][endNode(i, j)];
-                else 
-                    output[i][j] = dCostWrtNodes[i+1][endNode(i, j)];
+                    output[i][j] = nodeValue(i, startNode(i, j)) * dCostWrtNodes[i + 1][endNode(i, j)];
+                else
+                    output[i][j] = dCostWrtNodes[i + 1][endNode(i, j)];
             }
         }
         return output;
     }
 
-    
     // Returns the partial derivatives of the cost with respect to all of the weights connecting from startLayer to
     // startLayer+1 for the input that was last evaluated
     public double[] weightDerivatives(double[] answers, int startLayer) {
@@ -267,7 +268,6 @@ public class BlackBox {
             return Double.NaN; // Placeholder
         }
     }
-    
 
     // Derivative of the activation value of one node with respect to the activation value of another
     private double dNode1WrtNode2(int node1, int layer1, int node2, int layer2) {
@@ -288,6 +288,15 @@ public class BlackBox {
             }
         }
         return derivatives;
+    }
+    
+    private double[] temp(double[] answers) {
+        double[][] temp1 = softMaxPrime();
+        double[] out = new double[outputSize()];
+        for (int i = 0; i < out.length; i++)
+            for (int j = 0; j < out.length; j++)
+                out[i] += 2 * (answers[j] - outputLayer()[j]) * temp1[j][i];
+        return out;
     }
 
     private double sigmoid(double input) {
