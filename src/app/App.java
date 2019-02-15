@@ -16,9 +16,9 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         int[] layers = { 784, 10 };
-        net = new NeuralNet("saves/digit", layers);
+        //net = new NeuralNet("saves/digit", layers);
         // net.save();
-        //net = new NeuralNet("saves/digit/savedNet", 2);
+        net = new NeuralNet("saves/digit/savedNet", 2);
         System.out.println(net.cost());
         test(10000, false);
         test(200, true);
@@ -64,7 +64,7 @@ public class App {
     }
 
     private static void trainNet() {
-        double[] learningRate = { 0.1};
+        double[] learningRate = { 0.01};
         for (int i = 0; i < 300; i++) {
             double initial = net.cost();
             net.backPropagation(1, learningRate, true);
@@ -88,6 +88,8 @@ public class App {
         int[] answers = new int[numTest];
         for (int i = 0; i < numTest; i++) {
             test[i] = in.readLine();
+            for (int j = 1; j < test[i].length; j++)
+                test[i][j] = test[i][j] / 255;
             answers[i] = (int) test[i][0];
         }
         int[] predictions = net.classify(test);

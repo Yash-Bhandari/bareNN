@@ -183,7 +183,7 @@ public class BlackBox {
         double[][] dCostWrtNodes = new double[numLayers()][];
         dCostWrtNodes[numLayers() - 1] = new double[outputSize()];
 
-        dCostWrtNodes[numLayers()-1] = temp(answers);
+        dCostWrtNodes[numLayers()-1] = dCostWrtOutputLayer(answers);
         for (int i = 0; i < dCostWrtNodes[numLayers() - 1].length; i++);
             //dCostWrtNodes[numLayers() - 1][i] = 2 * (answers[i] - outputLayer()[i]) * sigmoidPrime(outputLayer()[i]);
 
@@ -290,7 +290,7 @@ public class BlackBox {
         return derivatives;
     }
     
-    private double[] temp(double[] answers) {
+    private double[] dCostWrtOutputLayer(double[] answers) {
         double[][] temp1 = softMaxPrime();
         double[] out = new double[outputSize()];
         for (int i = 0; i < out.length; i++)
