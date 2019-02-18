@@ -72,9 +72,6 @@ public class BlackBox {
             evalLayer(i);
         // for (double d : outputLayer())
         // assert !Double.isNaN(d);
-        double sum = 0;
-        for (double d : outputLayer())
-            sum += d;
         return outputLayer();
     }
 
@@ -85,10 +82,10 @@ public class BlackBox {
         for (double d : getLayer(layer + 1))
             assert !Double.isNaN(d);
 
-        // for (int i = 0; i < getLayer(layer + 1).length; i++)
-        // setNode(layer + 1, i, sigmoid(nodeValue(layer + 1, i)));
-
-        if (layer == numLayers() - 2)
+        if (layer < numLayers() - 2)
+            for (int i = 0; i < getLayer(layer + 1).length; i++)
+                setNode(layer + 1, i, sigmoid(nodeValue(layer + 1, i)));
+        else if (layer == numLayers() - 2)
             setLayer(layer + 1, softMax(getLayer(layer + 1))); // Final transformation of answer
     }
 
@@ -183,9 +180,10 @@ public class BlackBox {
         double[][] dCostWrtNodes = new double[numLayers()][];
         dCostWrtNodes[numLayers() - 1] = new double[outputSize()];
 
-        dCostWrtNodes[numLayers()-1] = dCostWrtOutputLayer(answers);
-        for (int i = 0; i < dCostWrtNodes[numLayers() - 1].length; i++);
-            //dCostWrtNodes[numLayers() - 1][i] = 2 * (answers[i] - outputLayer()[i]) * sigmoidPrime(outputLayer()[i]);
+        dCostWrtNodes[numLayers() - 1] = dCostWrtOutputLayer(answers);
+        for (int i = 0; i < dCostWrtNodes[numLayers() - 1].length; i++)
+            ;
+        // dCostWrtNodes[numLayers() - 1][i] = 2 * (answers[i] - outputLayer()[i]) * sigmoidPrime(outputLayer()[i]);
 
         for (int layer = numLayers() - 2; layer >= 1; layer--)
             dCostWrtNodes[layer] = dCostWrtLayer(layer, dCostWrtNodes[layer + 1]);
@@ -289,7 +287,7 @@ public class BlackBox {
         }
         return derivatives;
     }
-    
+
     private double[] dCostWrtOutputLayer(double[] answers) {
         double[][] temp1 = softMaxPrime();
         double[] out = new double[outputSize()];
